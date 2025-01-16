@@ -89,9 +89,9 @@ services:
 
   live:
     <<: *app-env
-    image: ${DOCKERHUB_USER:-makeplane}/plane-live:${APP_RELEASE:-stable}
+    image: makeplane/plane-live:stable
     platform: ${DOCKER_PLATFORM:-}
-    pull_policy: if_not_present
+    pull_policy: always
     restart: unless-stopped
     command: node live/dist/server.js live
     deploy:
