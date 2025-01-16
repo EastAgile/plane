@@ -34,6 +34,9 @@ export const CustomReadOnlyImageExtension = (props: Pick<TFileHandler, "getAsset
         aspectRatio: {
           default: null,
         },
+        filename: {
+          default: null,
+        },
       };
     },
 

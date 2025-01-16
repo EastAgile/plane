@@ -13,6 +13,7 @@ type PixelAttribute<TDefault> = Pixel | TDefault;
 
 export type ImageAttributes = {
   src: string | null;
+  filename: string | null;
   width: PixelAttribute<"35%" | number>;
   height: PixelAttribute<"auto" | number>;
   aspectRatio: number | null;

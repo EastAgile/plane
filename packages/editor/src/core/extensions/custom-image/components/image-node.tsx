@@ -81,6 +81,7 @@ export const CustomImageNode = (props: CustomImageNodeProps) => {
             setIsUploaded={setIsUploaded}
             selected={selected}
             updateAttributes={updateAttributes}
+            resolvedSrc={resolvedSrc}
           />
         )}
       </div>

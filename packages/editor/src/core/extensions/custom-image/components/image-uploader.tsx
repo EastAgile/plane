@@ -1,5 +1,5 @@
 import { ChangeEvent, useCallback, useEffect, useMemo, useRef } from "react";
-import { ImageIcon } from "lucide-react";
+import { DownloadIcon } from "lucide-react";
 // helpers
 import { cn } from "@/helpers/common";
 // hooks
@@ -12,6 +12,7 @@ type CustomImageUploaderProps = CustoBaseImageNodeViewProps & {
   loadImageFromFileSystem: (file: string) => void;
   failedToLoadImage: boolean;
   setIsUploaded: (isUploaded: boolean) => void;
+  resolvedSrc?: string;
 };
 
 export const CustomImageUploader = (props: CustomImageUploaderProps) => {
@@ -25,11 +26,12 @@ export const CustomImageUploader = (props: CustomImageUploaderProps) => {
     selected,
     setIsUploaded,
     updateAttributes,
+    resolvedSrc,
   } = props;
   // refs
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hasTriggeredFilePickerRef = useRef(false);
-  const { id: imageEntityId } = node.attrs;
+  const { id: imageEntityId, filename } = node.attrs;
   // derived values
   const imageComponentImageFileMap = useMemo(() => getImageComponentImageFileMap(editor), [editor]);
 
@@ -62,8 +64,9 @@ export const CustomImageUploader = (props: CustomImageUploaderProps) => {
         }
       }
     },
-    [imageComponentImageFileMap, imageEntityId, updateAttributes, getPos]
+    [imageComponentImageFileMap, imageEntityId, updateAttributes, getPos, editor, setIsUploaded]
   );
+
   // hooks
   const { uploading: isImageBeingUploaded, uploadFile } = useUploader({
     editor,
@@ -71,6 +74,7 @@ export const CustomImageUploader = (props: CustomImageUploaderProps) => {
     maxFileSize,
     onUpload,
   });
+
   const { draggedInside, onDrop, onDragEnter, onDragLeave } = useDropZone({
     editor,
     maxFileSize,
@@ -97,7 +101,7 @@ export const CustomImageUploader = (props: CustomImageUploaderProps) => {
         imageComponentImageFileMap?.set(imageEntityId, { ...meta, hasOpenedFileInputOnce: true });
       }
     }
-  }, [meta, uploadFile, imageComponentImageFileMap]);
+  }, [meta, uploadFile, imageComponentImageFileMap, imageEntityId]);
 
   const onFileChange = useCallback(
     async (e: ChangeEvent<HTMLInputElement>) => {
@@ -114,13 +118,13 @@ export const CustomImageUploader = (props: CustomImageUploaderProps) => {
         uploader: uploadFile,
       });
     },
-    [uploadFile, editor, getPos]
+    [uploadFile, editor, getPos, maxFileSize]
   );
 
   const getDisplayMessage = useCallback(() => {
     const isUploading = isImageBeingUploaded;
     if (failedToLoadImage) {
-      return "Error loading image";
+      return filename || "File not found";
     }
 
     if (isUploading) {
@@ -132,33 +136,43 @@ export const CustomImageUploader = (props: CustomImageUploaderProps) => {
     }
 
     return "Add an image";
-  }, [draggedInside, failedToLoadImage, isImageBeingUploaded]);
+  }, [draggedInside, failedToLoadImage, isImageBeingUploaded, filename]);
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (failedToLoadImage && resolvedSrc) {
+      e.preventDefault();
+      window.open(resolvedSrc, '_blank');
+    } else if (editor.isEditable) {
+      fileInputRef.current?.click();
+    }
+  };
 
   return (
     <div
       className={cn(
         "image-upload-component flex items-center justify-start gap-2 py-3 px-2 rounded-lg text-custom-text-300 hover:text-custom-text-200 bg-custom-background-90 hover:bg-custom-background-80 border border-dashed border-custom-border-300 transition-all duration-200 ease-in-out cursor-default",
         {
-          "hover:text-custom-text-200 cursor-pointer": editor.isEditable,
+          "hover:text-custom-text-200 cursor-pointer": editor.isEditable || failedToLoadImage,
           "bg-custom-background-80 text-custom-text-200": draggedInside,
           "text-custom-primary-200 bg-custom-primary-100/10 hover:bg-custom-primary-100/10 hover:text-custom-primary-200 border-custom-primary-200/10":
             selected,
-          "text-red-500 cursor-default hover:text-red-500": failedToLoadImage,
-          "bg-red-500/10 hover:bg-red-500/10": failedToLoadImage && selected,
+          "bg-custom-primary-100/10 hover:bg-custom-primary-100/10": failedToLoadImage && selected,
         }
       )}
       onDrop={onDrop}
       onDragOver={onDragEnter}
       onDragLeave={onDragLeave}
       contentEditable={false}
-      onClick={() => {
-        if (!failedToLoadImage && editor.isEditable) {
-          fileInputRef.current?.click();
-        }
-      }}
+      onClick={handleClick}
     >
-      <ImageIcon className="size-4" />
-      <div className="text-base font-medium">{getDisplayMessage()}</div>
+      <DownloadIcon className="size-4" />
+      <div
+        className={cn("text-base font-medium", {
+          "hover:underline": failedToLoadImage && resolvedSrc,
+        })}
+      >
+        {getDisplayMessage()}
+      </div>
       <input
         className="size-0 overflow-hidden"
         ref={fileInputRef}
