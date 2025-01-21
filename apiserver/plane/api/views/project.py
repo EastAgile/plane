@@ -170,36 +170,48 @@ class ProjectAPIEndpoint(BaseAPIView):
                 # Default states
                 states = [
                     {
-                        "name": "Backlog",
-                        "color": "#A3A3A3",
+                        "name": "Unstarted",
+                        "color": "#ff7700",
                         "sequence": 15000,
-                        "group": "backlog",
+                        "group": "unstarted",
                         "default": True,
                     },
                     {
-                        "name": "Todo",
-                        "color": "#3A3A3A",
-                        "sequence": 25000,
+                        "name": "Unscheduled",
+                        "color": "#ff7700",
+                        "sequence": 20000,
                         "group": "unstarted",
                     },
                     {
-                        "name": "In Progress",
-                        "color": "#F59E0B",
+                        "name": "Started",
+                        "color": "#ffd700",
+                        "sequence": 25000,
+                        "group": "started",
+                    },
+                    {
+                        "name": "Finished",
+                        "color": "#87ceeb",
                         "sequence": 35000,
                         "group": "started",
                     },
                     {
-                        "name": "Done",
-                        "color": "#16A34A",
+                        "name": "Delivered",
+                        "color": "#98fb98",
                         "sequence": 45000,
+                        "group": "started",
+                    },
+                    {
+                        "name": "Accepted",
+                        "color": "#16a34a",
+                        "sequence": 55000,
                         "group": "completed",
                     },
                     {
-                        "name": "Cancelled",
-                        "color": "#EF4444",
-                        "sequence": 55000,
+                        "name": "Rejected",
+                        "color": "#ef4444",
+                        "sequence": 65000,
                         "group": "cancelled",
-                    },
+                    }
                 ]
 
                 State.objects.bulk_create(
