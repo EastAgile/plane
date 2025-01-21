@@ -534,23 +534,6 @@ class ProjectAssetEndpoint(BaseAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Check if the file type is allowed
-        allowed_types = [
-            "image/jpeg",
-            "image/png",
-            "image/webp",
-            "image/jpg",
-            "image/gif",
-        ]
-        if type not in allowed_types:
-            return Response(
-                {
-                    "error": "Invalid file type. Only JPEG and PNG files are allowed.",
-                    "status": False,
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         # Get the size limit
         size_limit = min(settings.FILE_SIZE_LIMIT, size)
 

@@ -36,11 +36,11 @@ export const CustomImageUploader = (props: CustomImageUploaderProps) => {
   const imageComponentImageFileMap = useMemo(() => getImageComponentImageFileMap(editor), [editor]);
 
   const onUpload = useCallback(
-    (url: string) => {
+    (url: string, file_name: string) => {
       if (url) {
         setIsUploaded(true);
         // Update the node view's src attribute post upload
-        updateAttributes({ src: url });
+        updateAttributes({ src: url, filename: file_name });
         imageComponentImageFileMap?.delete(imageEntityId);
 
         const pos = getPos();
@@ -178,7 +178,6 @@ export const CustomImageUploader = (props: CustomImageUploaderProps) => {
         ref={fileInputRef}
         hidden
         type="file"
-        accept=".jpg,.jpeg,.png,.webp"
         onChange={onFileChange}
         multiple
       />

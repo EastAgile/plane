@@ -17,11 +17,10 @@ export const DropHandlerExtension = () =>
               if (event.clipboardData && event.clipboardData.files && event.clipboardData.files.length > 0) {
                 event.preventDefault();
                 const files = Array.from(event.clipboardData.files);
-                const imageFiles = files.filter((file) => file.type.startsWith("image"));
 
-                if (imageFiles.length > 0) {
+                if (files.length > 0) {
                   const pos = view.state.selection.from;
-                  insertImagesSafely({ editor, files: imageFiles, initialPos: pos, event: "drop" });
+                  insertImagesSafely({ editor, files: files, initialPos: pos, event: "drop" });
                 }
                 return true;
               }
@@ -31,9 +30,8 @@ export const DropHandlerExtension = () =>
               if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files.length > 0) {
                 event.preventDefault();
                 const files = Array.from(event.dataTransfer.files);
-                const imageFiles = files.filter((file) => file.type.startsWith("image"));
 
-                if (imageFiles.length > 0) {
+                if (files.length > 0) {
                   const coordinates = view.posAtCoords({
                     left: event.clientX,
                     top: event.clientY,
@@ -41,7 +39,7 @@ export const DropHandlerExtension = () =>
 
                   if (coordinates) {
                     const pos = coordinates.pos;
-                    insertImagesSafely({ editor, files: imageFiles, initialPos: pos, event: "drop" });
+                    insertImagesSafely({ editor, files: files, initialPos: pos, event: "drop" });
                   }
                   return true;
                 }

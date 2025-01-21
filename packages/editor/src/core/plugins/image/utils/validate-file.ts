@@ -11,12 +11,6 @@ export const isFileValid = (args: TArgs): boolean => {
     return false;
   }
 
-  const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-  if (!allowedTypes.includes(file.type)) {
-    alert("Invalid file type. Please select a JPEG, JPG, PNG, or WEBP image file.");
-    return false;
-  }
-
   if (file.size > maxFileSize) {
     alert(`File size too large. Please select a file smaller than ${maxFileSize / 1024 / 1024}MB.`);
     return false;

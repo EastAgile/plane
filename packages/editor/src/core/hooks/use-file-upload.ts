@@ -9,7 +9,7 @@ type TUploaderArgs = {
   editor: Editor;
   loadImageFromFileSystem: (file: string) => void;
   maxFileSize: number;
-  onUpload: (url: string) => void;
+  onUpload: (url: string, file_name: string) => void;
 };
 
 export const useUploader = (args: TUploaderArgs) => {
@@ -54,7 +54,7 @@ export const useUploader = (args: TUploaderArgs) => {
         if (!url) {
           throw new Error("Something went wrong while uploading the image");
         }
-        onUpload(url);
+        onUpload(url, fileNameTrimmed);
       } catch (errPayload: any) {
         console.log(errPayload);
         const error = errPayload?.response?.data?.error || "Something went wrong";

@@ -134,6 +134,7 @@ export class FileService extends APIService {
         const fileUploadPayload = generateFileUploadPayload(signedURLResponse, file);
         await this.fileUploadService.uploadFile(signedURLResponse.upload_data.url, fileUploadPayload);
         await this.updateProjectAssetUploadStatus(workspaceSlug, projectId, signedURLResponse.asset_id);
+        signedURLResponse.file_name = file.name;
         return signedURLResponse;
       })
       .catch((error) => {

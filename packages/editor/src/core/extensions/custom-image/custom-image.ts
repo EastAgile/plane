@@ -71,6 +71,9 @@ export const CustomImageExtension = (props: TFileHandler) => {
         aspectRatio: {
           default: null,
         },
+        filename: {
+          default: null,
+        },
       };
     },
 

@@ -17,6 +17,7 @@ export type TFileMetaData = TFileMetaDataLite & TFileEntityInfo;
 export type TFileSignedURLResponse = {
   asset_id: string;
   asset_url: string;
+  file_name: string;
   upload_data: {
     url: string;
     fields: {
