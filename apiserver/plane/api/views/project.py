@@ -27,6 +27,8 @@ from plane.db.models import (
     State,
     Workspace,
     UserFavorite,
+    Estimate,
+    EstimatePoint,
 )
 from plane.bgtasks.webhook_task import model_activity
 from .base import BaseAPIView
@@ -230,7 +232,44 @@ class ProjectAPIEndpoint(BaseAPIView):
                     ]
                 )
 
+                # Create default Estimate
+                estimate = Estimate.objects.create(
+                    name="Points",
+                    description="",
+                    type="points",
+                    project=serializer.instance,
+                    workspace=serializer.instance.workspace,
+                    created_by=request.user,
+                    last_used=True
+                )
+
+                # Create default EstimatePoints (1-6)
+                estimate_points = [
+                    {
+                        "key": i,
+                        "value": str(i),
+                        "description": ""
+                    } for i in range(1, 7)
+                ]
+
+                EstimatePoint.objects.bulk_create(
+                    [
+                        EstimatePoint(
+                            estimate=estimate,
+                            project=serializer.instance,
+                            workspace=serializer.instance.workspace,
+                            key=point["key"],
+                            value=point["value"],
+                            description=point["description"],
+                            created_by=request.user,
+                        )
+                        for point in estimate_points
+                    ]
+                )
+
                 project = self.get_queryset().filter(pk=serializer.data["id"]).first()
+                project.estimate = estimate
+                project.save()
 
                 # Model activity
                 model_activity.delay(
