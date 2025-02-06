@@ -120,3 +120,17 @@ python run_migration.py
 ```
 
 # Maintenance (for EA fork)
+
+- Update the codebase as needed and push to the github repo
+
+- Go to `plane-selfhost` directory and `source .env` to load env vars again
+
+- Perform the update (will stop the docker stack, pull new code and build them). Also type y/Yes when asked
+```
+./setup.sh upgrade
+```
+
+- Start the stack again
+```
+./setup.sh start
+```
