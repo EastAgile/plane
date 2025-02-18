@@ -342,8 +342,15 @@ class UserNotificationPreferenceEndpoint(BaseAPIView):
 
     # request the object
     def get(self, request):
-        user_notification_preference = UserNotificationPreference.objects.get(
-            user=request.user
+        user_notification_preference, created = UserNotificationPreference.objects.get_or_create(
+            user=request.user,
+            defaults={
+                'property_change': False,
+                'state_change': False,
+                'comment': False,
+                'mention': False,
+                'issue_completed': False,
+            }
         )
         serializer = UserNotificationPreferenceSerializer(user_notification_preference)
         return Response(serializer.data, status=status.HTTP_200_OK)
