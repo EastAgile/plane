@@ -28,9 +28,9 @@ app.conf.beat_schedule = {
         "task": "plane.bgtasks.file_asset_task.delete_unuploaded_file_asset",
         "schedule": crontab(hour=0, minute=0),
     },
-    "check-every-five-minutes-to-send-email-notifications": {
+    "check-every-minutes-to-send-email-notifications": {
         "task": "plane.bgtasks.email_notification_task.stack_email_notification",
-        "schedule": crontab(minute="*/5"),
+        "schedule": crontab(minute="*/1"),
     },
     "check-every-day-to-delete-hard-delete": {
         "task": "plane.bgtasks.deletion_task.hard_delete",
