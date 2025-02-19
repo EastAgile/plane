@@ -133,9 +133,13 @@ export const CustomMention = ({
               return true;
             }
 
-            const navigationKeys = ["ArrowUp", "ArrowDown", "Enter"];
+            const navigationKeys = ["ArrowUp", "ArrowDown", "Enter", "Tab"];
 
             if (navigationKeys.includes(props.event.key)) {
+              // Prevent default Tab behavior
+              if (props.event.key === "Tab") {
+                props.event.preventDefault();
+              }
               // @ts-expect-error - Tippy types are incorrect
               component?.ref?.onKeyDown(props);
               event?.stopPropagation();
