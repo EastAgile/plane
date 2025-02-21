@@ -8,12 +8,36 @@ from rest_framework import serializers
 
 # Module imports
 from .base import DynamicBaseSerializer
-from plane.db.models import Webhook, WebhookLog
+from plane.db.models import Webhook, WebhookLog, WebhookProject, Project
 from plane.db.models.webhook import validate_domain, validate_schema
 
 
 class WebhookSerializer(DynamicBaseSerializer):
     url = serializers.URLField(validators=[validate_schema, validate_domain])
+    project_type = serializers.ChoiceField(choices=['all', 'individual'], required=False)
+    selected_projects = serializers.ListField(child=serializers.UUIDField(), required=False)
+
+    def _handle_webhook_projects(self, webhook, workspace_id, project_type, selected_projects):
+        """Helper method to handle webhook project relationships"""
+        # Delete existing webhook projects if any
+        if hasattr(webhook, 'webhook_projects'):
+            webhook.webhook_projects.all().delete()
+
+        # Create new webhook project relationships if needed
+        if selected_projects:
+            projects = Project.objects.filter(
+                id__in=selected_projects,
+                workspace_id=workspace_id
+            )
+            webhook_projects = [
+                WebhookProject(
+                    webhook=webhook,
+                    project=project,
+                    workspace_id=workspace_id
+                )
+                for project in projects
+            ]
+            WebhookProject.objects.bulk_create(webhook_projects)
 
     def create(self, validated_data):
         url = validated_data.get("url", None)
@@ -61,7 +85,25 @@ class WebhookSerializer(DynamicBaseSerializer):
                 {"url": "URL domain or its subdomain is not allowed."}
             )
 
-        return Webhook.objects.create(**validated_data)
+        # Handle project type and selected projects
+        project_type = validated_data.pop('project_type', 'all')
+        selected_projects = validated_data.pop('selected_projects', [])
+
+        # Set is_workspace_wide based on project_type
+        validated_data['is_workspace_wide'] = (project_type == 'all')
+
+        # Create the webhook
+        webhook = Webhook.objects.create(**validated_data)
+
+        # Handle webhook project relationships
+        self._handle_webhook_projects(
+            webhook=webhook,
+            workspace_id=validated_data['workspace_id'],
+            project_type=project_type,
+            selected_projects=selected_projects
+        )
+
+        return webhook
 
     def update(self, instance, validated_data):
         url = validated_data.get("url", None)
@@ -111,7 +153,33 @@ class WebhookSerializer(DynamicBaseSerializer):
                     {"url": "URL domain or its subdomain is not allowed."}
                 )
 
+        # Handle project type and selected projects
+        project_type = validated_data.pop('project_type', None)
+        selected_projects = validated_data.pop('selected_projects', None)
+
+        if project_type is not None:
+            # Update is_workspace_wide based on project_type
+            validated_data['is_workspace_wide'] = (project_type == 'all')
+
+            # Handle webhook project relationships
+            self._handle_webhook_projects(
+                webhook=instance,
+                workspace_id=instance.workspace_id,
+                project_type=project_type,
+                selected_projects=selected_projects or []
+            )
+
         return super().update(instance, validated_data)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # Add project_type and selected_projects to the response
+        data['project_type'] = 'all' if instance.is_workspace_wide else 'individual'
+        data['selected_projects'] = list(
+            instance.webhook_projects.filter(deleted_at__isnull=True)
+            .values_list('project_id', flat=True)
+        )
+        return data
 
     class Meta:
         model = Webhook

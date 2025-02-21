@@ -130,7 +130,31 @@ python run_migration.py
 ./setup.sh upgrade
 ```
 
+- Check plane env again as the upgrade often override the `https` back to `http` for `WEB_URL` and `CORS_ALLOWED_ORIGINS`
+```
+nano plane-app/plane.env
+```
+
 - Start the stack again
 ```
 ./setup.sh start
 ```
+
+
+# Configure custom Slack webhook
+
+- Go to https://api.slack.com/apps/A08DC5CF5AT/incoming-webhooks
+
+- At the bottom, click "Add New Webhook to Workspace" and follow the steps
+
+- Note the webhook url (`https://hooks.slack.com/... `)
+
+- Visit the plane workspace settings page as a workspace owner
+
+- Click on "Webhooks" section and "Add webhook" (or edit existing ones)
+
+- Select either all events or individual events
+
+- Select either all projects or selected projects
+
+- Create or save (update)

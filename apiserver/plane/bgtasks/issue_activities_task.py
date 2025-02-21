@@ -1661,6 +1661,8 @@ def issue_activity(
                     slug=activity.workspace.slug,
                     old_identifier=activity.old_identifier,
                     new_identifier=activity.new_identifier,
+                    for_slack=True,
+                    project_id=project_id,
                 )
 
         if notification:

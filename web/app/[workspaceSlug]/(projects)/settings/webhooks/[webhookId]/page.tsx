@@ -51,7 +51,10 @@ const WebhookDetailsPage = observer(() => {
       module: formData?.module,
       issue: formData?.issue,
       issue_comment: formData?.issue_comment,
+      project_type: formData?.project_type,
+      selected_projects: formData?.selected_projects,
     };
+
     await updateWebhook(workspaceSlug.toString(), formData.id, payload)
       .then(() => {
         setToast({

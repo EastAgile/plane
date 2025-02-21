@@ -397,6 +397,7 @@ class ProjectAPIEndpoint(BaseAPIView):
             event_id=project.id,
             old_identifier=None,
             new_identifier=None,
+            project_id=project.id,
         )
         return Response(status=status.HTTP_204_NO_CONTENT)
 

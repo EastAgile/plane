@@ -10,6 +10,9 @@ export interface IWebhook {
   secret_key?: string;
   updated_at: string;
   url: string;
+  project_type?: "all" | "individual";
+  selected_projects?: string[];
 }
 
 export type TWebhookEventTypes = "all" | "individual";
+export type TWebhookProjectType = "all" | "individual";

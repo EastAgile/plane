@@ -42,6 +42,7 @@ class Webhook(BaseModel):
     cycle = models.BooleanField(default=False)
     issue_comment = models.BooleanField(default=False)
     is_internal = models.BooleanField(default=False)
+    is_workspace_wide = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{self.workspace.slug} {self.url}"
@@ -83,3 +84,42 @@ class WebhookLog(BaseModel):
 
     def __str__(self):
         return f"{self.event_type} {str(self.webhook.url)}"
+
+
+class WebhookProject(BaseModel):
+    webhook = models.ForeignKey(
+        "db.Webhook",
+        on_delete=models.CASCADE,
+        related_name="webhook_projects"
+    )
+    project = models.ForeignKey(
+        "db.Project",
+        on_delete=models.CASCADE,
+        related_name="project_webhooks"
+    )
+    workspace = models.ForeignKey(
+        "db.Workspace",
+        on_delete=models.CASCADE,
+        related_name="workspace_webhook_projects"
+    )
+
+    class Meta:
+        unique_together = ["webhook", "project", "deleted_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["webhook", "project"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="webhook_project_unique_webhook_project_when_deleted_at_null",
+            )
+        ]
+        verbose_name = "Webhook Project"
+        verbose_name_plural = "Webhook Projects"
+        db_table = "webhook_projects"
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        return f"{self.webhook.url} - {self.project.name}"
+
+    def save(self, *args, **kwargs):
+        self.workspace = self.project.workspace
+        super(WebhookProject, self).save(*args, **kwargs)

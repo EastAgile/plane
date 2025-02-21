@@ -58,7 +58,7 @@ from .social_connection import SocialLoginConnection
 from .state import State
 from .user import Account, Profile, User
 from .view import IssueView
-from .webhook import Webhook, WebhookLog
+from .webhook import Webhook, WebhookLog, WebhookProject
 from .workspace import (
     Workspace,
     WorkspaceBaseModel,

@@ -535,6 +535,7 @@ class ProjectViewSet(BaseViewSet):
                 event_id=project.id,
                 old_identifier=None,
                 new_identifier=None,
+                project_id=project_id,
             )
             # Delete the project members
             DeployBoard.objects.filter(project_id=pk, workspace__slug=slug).delete()

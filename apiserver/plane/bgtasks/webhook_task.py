@@ -16,6 +16,8 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils.html import strip_tags
+from django.db.models import Q
 
 # Module imports
 from plane.api.serializers import (
@@ -247,7 +249,7 @@ def send_webhook_deactivation_email(webhook_id, receiver_id, current_site, reaso
     retry_jitter=True,
 )
 def webhook_send_task(
-    self, webhook, slug, event, event_data, action, current_site, activity
+    self, webhook, slug, event, event_data, action, current_site, activity, for_slack=False
 ):
     try:
         webhook = Webhook.objects.get(id=webhook, workspace__slug=slug)
@@ -287,6 +289,11 @@ def webhook_send_task(
             "data": event_data,
             "activity": activity,
         }
+
+        if for_slack:
+            slack_text = get_slack_text(event, event_data, action, activity, current_site, slug)
+            if slack_text:
+                payload["text"] = slack_text
 
         # Use HMAC for generating signature
         if webhook.secret_key:
@@ -363,24 +370,39 @@ def webhook_activity(
     event_id,
     old_identifier,
     new_identifier,
+    for_slack=False,
+    project_id=None,
 ):
     try:
-        webhooks = Webhook.objects.filter(workspace__slug=slug, is_active=True)
+        target_project_id = project_id
+        if verb != "deleted":
+            event_model_data = get_model_data(event=event, event_id=event_id)
+            target_project_id = event_model_data.get("project", project_id)
 
+        # Base query with project filtering using Q objects
+        webhooks = Webhook.objects.filter(
+            workspace__slug=slug,
+            is_active=True
+        ).filter(
+            # Either webhook is workspace-wide OR project is in selected projects
+            Q(is_workspace_wide=True) |
+            Q(webhook_projects__project_id=target_project_id, webhook_projects__deleted_at__isnull=True)
+        )
+
+        # Filter based on event type
         if event == "project":
             webhooks = webhooks.filter(project=True)
-
-        if event == "issue":
+        elif event == "issue":
             webhooks = webhooks.filter(issue=True)
-
-        if event == "module" or event == "module_issue":
+        elif event in ["module", "module_issue"]:
             webhooks = webhooks.filter(module=True)
-
-        if event == "cycle" or event == "cycle_issue":
+        elif event in ["cycle", "cycle_issue"]:
             webhooks = webhooks.filter(cycle=True)
-
-        if event == "issue_comment":
+        elif event == "issue_comment":
             webhooks = webhooks.filter(issue_comment=True)
+
+        # Use distinct() to avoid duplicates from the JOIN
+        webhooks = webhooks.distinct()
 
         for webhook in webhooks:
             webhook_send_task.delay(
@@ -402,6 +424,7 @@ def webhook_activity(
                     "old_identifier": old_identifier,
                     "new_identifier": new_identifier,
                 },
+                for_slack=for_slack,
             )
         return
     except Exception as e:
@@ -432,6 +455,7 @@ def model_activity(
             event_id=model_id,
             old_identifier=None,
             new_identifier=None,
+            for_slack=True,
         )
         return
 
@@ -462,3 +486,34 @@ def model_activity(
                 )
 
     return
+
+
+def get_slack_text(event, event_data, action, activity, current_site, slug):
+    issues_base_url = f"{current_site}/{slug}/projects/{event_data['project']}/issues/"
+    actor_display_name = activity['actor']['display_name']
+
+    if event == "issue_comment" and action == "created":
+        comment_text = strip_tags(activity["new_value"])
+        truncated_text = comment_text[:50] + "..." if len(comment_text) > 50 else comment_text
+        return f"{actor_display_name} added a new comment: <{issues_base_url}{event_data['issue']}|{truncated_text}>"
+    elif event == "issue" and action == "created":
+        return f"{actor_display_name} created a new issue: <{issues_base_url}{event_data['id']}|{event_data['name']}>"
+    elif event == "issue" and action == "updated":
+        if activity["field"] == "assignees":
+            if activity["old_value"] is None:
+                return f"{actor_display_name} assigned `{activity['new_value']}` to issue <{issues_base_url}{event_data['id']}|{event_data['name']}>"
+            else:
+                return f"{actor_display_name} removed `{activity['old_value']}` from issue <{issues_base_url}{event_data['id']}|{event_data['name']}>"
+        elif activity["field"] == "labels":
+            if activity["old_value"] is None:
+                return f"{actor_display_name} added label `{activity['new_value']}` to issue <{issues_base_url}{event_data['id']}|{event_data['name']}>"
+            else:
+                return f"{actor_display_name} removed label `{activity['old_value']}` from issue <{issues_base_url}{event_data['id']}|{event_data['name']}>"
+        elif activity["field"] == "description":
+            description_text = strip_tags(activity["new_value"])
+            truncated_text = description_text[:50] + "..." if len(description_text) > 50 else description_text
+            return f"{actor_display_name} updated `description` to `{truncated_text}` for issue <{issues_base_url}{event_data['id']}|{event_data['name']}>"
+        else:
+            return f"{actor_display_name} updated `{activity['field']}` to `{strip_tags(activity['new_value'])}` for issue <{issues_base_url}{event_data['id']}|{event_data['name']}>"
+
+    return None

@@ -61,6 +61,9 @@ export const CreateWebhookModal: React.FC<ICreateWebhookModal> = (props) => {
         issue_comment: formData.issue_comment ?? false,
       };
 
+    payload["project_type"] = formData.project_type;
+    payload["selected_projects"] = formData.selected_projects;
+
     await createWebhook(workspaceSlug.toString(), payload)
       .then(({ webHook, secretKey }) => {
         setToast({

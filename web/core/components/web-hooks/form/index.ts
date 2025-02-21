@@ -5,3 +5,4 @@ export * from "./individual-event-options";
 export * from "./input";
 export * from "./secret-key";
 export * from "./toggle";
+export * from "./project-selection";
