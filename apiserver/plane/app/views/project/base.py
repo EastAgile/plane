@@ -291,14 +291,20 @@ class ProjectViewSet(BaseViewSet):
                 # Default states
                 states = [
                     {
-                        "name": "Unstarted",
+                        "name": "Icebox",
+                        "color": "#ff7700",
+                        "sequence": 10000,
+                        "group": "unstarted",
+                    },
+                    {
+                        "name": "Backlog",
                         "color": "#ff7700",
                         "sequence": 15000,
                         "group": "unstarted",
                         "default": True,
                     },
                     {
-                        "name": "Unscheduled",
+                        "name": "Unstarted",
                         "color": "#ff7700",
                         "sequence": 20000,
                         "group": "unstarted",
