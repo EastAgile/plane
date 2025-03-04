@@ -304,20 +304,7 @@ class CycleViewSet(BaseViewSet):
         )
 
         request_data = request.data
-
-        if cycle.end_date is not None and cycle.end_date < timezone.now():
-            if "sort_order" in request_data:
-                # Can only change sort order for a completed cycle``
-                request_data = {
-                    "sort_order": request_data.get("sort_order", cycle.sort_order)
-                }
-            else:
-                return Response(
-                    {
-                        "error": "The Cycle has already been completed so it cannot be edited"
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+        # Allow updating dates for completed cycles - restriction removed
 
         serializer = CycleWriteSerializer(cycle, data=request.data, partial=True)
         if serializer.is_valid():
@@ -492,25 +479,8 @@ class CycleDateCheckEndpoint(BaseAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Check if any cycle intersects in the given interval
-        cycles = Cycle.objects.filter(
-            Q(workspace__slug=slug)
-            & Q(project_id=project_id)
-            & (
-                Q(start_date__lte=start_date, end_date__gte=start_date)
-                | Q(start_date__lte=end_date, end_date__gte=end_date)
-                | Q(start_date__gte=start_date, end_date__lte=end_date)
-            )
-        ).exclude(pk=cycle_id)
-        if cycles.exists():
-            return Response(
-                {
-                    "error": "You have a cycle already on the given dates, if you want to create a draft cycle you can do that by removing dates",
-                    "status": False,
-                }
-            )
-        else:
-            return Response({"status": True}, status=status.HTTP_200_OK)
+        # No longer checking for cycle date overlaps
+        return Response({"status": True}, status=status.HTTP_200_OK)
 
 
 class CycleFavoriteViewSet(BaseViewSet):

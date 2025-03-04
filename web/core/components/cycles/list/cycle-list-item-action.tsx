@@ -193,7 +193,7 @@ export const CycleListItemAction: FC<Props> = observer((props) => {
   const isArchived = Boolean(cycleDetails.archived_at);
   const isCompleted = cycleStatus === "completed";
 
-  const isDisabled = !isEditingAllowed || isArchived || isCompleted;
+  const isDisabled = !isEditingAllowed || isArchived;
   // handlers
   const openCycleOverview = (e: MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
     e.preventDefault();
@@ -229,7 +229,6 @@ export const CycleListItemAction: FC<Props> = observer((props) => {
                 <DateRangeDropdown
                   buttonContainerClassName={`h-6 w-full flex ${isDisabled ? "cursor-not-allowed" : "cursor-pointer"} items-center gap-1.5 text-custom-text-300 border-[0.5px] border-custom-border-300 rounded text-xs`}
                   buttonVariant="transparent-with-text"
-                  minDate={new Date()}
                   value={{
                     from: getDate(startDateValue),
                     to: getDate(endDateValue),

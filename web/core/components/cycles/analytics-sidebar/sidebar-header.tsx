@@ -299,7 +299,6 @@ export const CycleSidebarHeader: FC<Props> = observer((props) => {
                 <DateRangeDropdown
                   className="h-7"
                   buttonVariant="transparent-with-text"
-                  minDate={new Date()}
                   value={{
                     from: getDate(startDateValue),
                     to: getDate(endDateValue),
@@ -314,7 +313,7 @@ export const CycleSidebarHeader: FC<Props> = observer((props) => {
                     to: "End date",
                   }}
                   required={cycleDetails.status !== "draft"}
-                  disabled={!isEditingAllowed || isArchived || isCompleted}
+                  disabled={!isEditingAllowed || isArchived}
                 />
               )}
             />
