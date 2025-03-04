@@ -243,13 +243,13 @@ class ProjectAPIEndpoint(BaseAPIView):
                     last_used=True
                 )
 
-                # Create default EstimatePoints (1-6)
+                # Create default EstimatePoints (0-3)
                 estimate_points = [
                     {
                         "key": i,
                         "value": str(i),
                         "description": ""
-                    } for i in range(1, 7)
+                    } for i in range(0, 4)
                 ]
 
                 EstimatePoint.objects.bulk_create(
