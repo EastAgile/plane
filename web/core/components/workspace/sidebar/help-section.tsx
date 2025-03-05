@@ -15,7 +15,6 @@ import { useAppTheme, useCommandPalette, useInstance, useTransient, useUserSetti
 import { usePlatformOS } from "@/hooks/use-platform-os";
 // plane web components
 import { PlaneVersionNumber } from "@/plane-web/components/global";
-import { WorkspaceEditionBadge } from "@/plane-web/components/workspace";
 
 export interface WorkspaceHelpSectionProps {
   setSidebarActive?: React.Dispatch<React.SetStateAction<boolean>>;
@@ -155,13 +154,6 @@ export const SidebarHelpSection: React.FC<WorkspaceHelpSectionProps> = observer(
               <PlaneVersionNumber />
             </div>
           </CustomMenu>
-        </div>
-        <div
-          className={cn("w-full flex-grow px-0.5", {
-            hidden: isCollapsed,
-          })}
-        >
-          <WorkspaceEditionBadge />
         </div>
         <div
           className={`flex flex-shrink-0 items-center gap-1 ${isCollapsed ? "flex-col justify-center" : "justify-evenly"}`}
