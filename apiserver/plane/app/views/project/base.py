@@ -39,6 +39,7 @@ from plane.db.models import (
     WorkspaceMember,
     Estimate,
     EstimatePoint,
+    Label,
 )
 from plane.utils.cache import cache_response
 from plane.bgtasks.webhook_task import model_activity, webhook_activity
@@ -389,6 +390,49 @@ class ProjectViewSet(BaseViewSet):
                             created_by=request.user,
                         )
                         for point in estimate_points
+                    ]
+                )
+
+                # Create default labels
+                PT_TYPE_LABELS = [
+                    {
+                        "name": "Feature",
+                        "color": "#4EA7FC",
+                        "description": "New feature or enhancement",
+                        "sort_order": 1
+                    },
+                    {
+                        "name": "Bug",
+                        "color": "#FC4E4E",
+                        "description": "Something is not working",
+                        "sort_order": 2
+                    },
+                    {
+                        "name": "Chore",
+                        "color": "#B1B1B1",
+                        "description": "Regular task or maintenance",
+                        "sort_order": 3
+                    },
+                    {
+                        "name": "Release",
+                        "color": "#60C689",
+                        "description": "Release or milestone marker",
+                        "sort_order": 4
+                    }
+                ]
+
+                Label.objects.bulk_create(
+                    [
+                        Label(
+                            name=label["name"],
+                            color=label["color"],
+                            description=label["description"],
+                            sort_order=label["sort_order"],
+                            project=serializer.instance,
+                            workspace=serializer.instance.workspace,
+                            created_by=request.user,
+                        )
+                        for label in PT_TYPE_LABELS
                     ]
                 )
 
