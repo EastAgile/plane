@@ -158,21 +158,41 @@ class IssueCreateSerializer(BaseSerializer):
                     updated_by_id=updated_by_id,
                 )
 
-        if labels is not None and len(labels):
-            IssueLabel.objects.bulk_create(
-                [
+        # Add labels
+        label_objects = []
+
+        # If no labels were provided, set "Feature" as default label if it exists
+        if (labels is None or len(labels) == 0):
+            # Check if the project has a "Feature" label
+            feature_label = Label.objects.filter(project_id=project_id, name="Feature").first()
+            if feature_label is not None:
+                label_objects.append(
                     IssueLabel(
-                        label=label,
+                        label=feature_label,
                         issue=issue,
                         project_id=project_id,
                         workspace_id=workspace_id,
                         created_by_id=created_by_id,
                         updated_by_id=updated_by_id,
                     )
-                    for label in labels
-                ],
-                batch_size=10,
-            )
+                )
+        else:
+            # Use provided labels
+            label_objects = [
+                IssueLabel(
+                    label=label,
+                    issue=issue,
+                    project_id=project_id,
+                    workspace_id=workspace_id,
+                    created_by_id=created_by_id,
+                    updated_by_id=updated_by_id,
+                )
+                for label in labels
+            ]
+            
+        # Create the label relationships if any exist
+        if label_objects:
+            IssueLabel.objects.bulk_create(label_objects, batch_size=10)
 
         return issue
 

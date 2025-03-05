@@ -27,7 +27,7 @@ import { getChangedIssuefields } from "@/helpers/issue.helper";
 import { getTabIndex } from "@/helpers/tab-indices.helper";
 // hooks
 import { useIssueModal } from "@/hooks/context/use-issue-modal";
-import { useIssueDetail, useProject, useProjectState, useWorkspaceDraftIssues } from "@/hooks/store";
+import { useIssueDetail, useLabel, useProject, useProjectState, useWorkspaceDraftIssues } from "@/hooks/store";
 import { usePlatformOS } from "@/hooks/use-platform-os";
 import { useProjectIssueProperties } from "@/hooks/use-project-issue-properties";
 // plane web components
@@ -126,8 +126,9 @@ export const IssueFormRoot: FC<IssueFormProps> = observer((props) => {
   const {
     issue: { getIssueById },
   } = useIssueDetail();
-  const { fetchCycles } = useProjectIssueProperties();
+  const { fetchCycles, fetchLabels } = useProjectIssueProperties();
   const { getStateById } = useProjectState();
+  const { getProjectLabels } = useLabel();
 
   // form info
   const {
@@ -171,10 +172,41 @@ export const IssueFormRoot: FC<IssueFormProps> = observer((props) => {
         parent_id: formData.parent_id,
       });
     }
-    if (projectId && routeProjectId !== projectId) fetchCycles(workspaceSlug?.toString(), projectId);
+    if (projectId && routeProjectId !== projectId) {
+      fetchCycles(workspaceSlug?.toString(), projectId);
+      fetchLabels(workspaceSlug?.toString(), projectId);
+    }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
+
+  // Set default "Feature" label if it exists and no labels are already selected
+  useEffect(() => {
+    if (!projectId || !workspaceSlug || data?.id) return;
+
+    const currentLabelIds = watch("label_ids");
+    if (currentLabelIds.length > 0) return; // Don't override if user has already selected labels
+
+    // First fetch the labels if they haven't been fetched yet
+    fetchLabels(workspaceSlug.toString(), projectId).then(() => {
+      // Get the labels for this project
+      const projectLabels = getProjectLabels(projectId);
+
+      if (!projectLabels) return;
+
+      // Find the "Feature" label
+      const featureLabel = projectLabels.find(
+        (label) => label.name.toLowerCase() === "feature"
+      );
+
+      // If found, set it as default
+      if (featureLabel) {
+        setValue("label_ids", [featureLabel.id]);
+      }
+    });
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId, workspaceSlug]);
 
   // Update the issue type id when the project id changes
   useEffect(() => {
