@@ -62,7 +62,10 @@ export const CycleListItemAction: FC<Props> = observer((props) => {
 
   // form
   const { control, reset } = useForm({
-    defaultValues,
+    defaultValues: {
+      ...defaultValues,
+      team_strength: cycleDetails?.team_strength || 1.0,
+    },
   });
 
   // derived values
@@ -135,6 +138,24 @@ export const CycleListItemAction: FC<Props> = observer((props) => {
   const submitChanges = (data: Partial<ICycle>) => {
     if (!workspaceSlug || !projectId || !cycleId) return;
     updateCycleDetails(workspaceSlug.toString(), projectId.toString(), cycleId.toString(), data);
+  };
+  
+  const handleTeamStrengthChange = async (value: number) => {
+    if (!workspaceSlug || !projectId || !cycleId) return;
+    if (value < 0) {
+      setToast({
+        type: TOAST_TYPE.ERROR,
+        title: "Error!",
+        message: "Team strength cannot be negative.",
+      });
+      return;
+    }
+    submitChanges({ team_strength: value });
+    setToast({
+      type: TOAST_TYPE.SUCCESS,
+      title: "Success!",
+      message: "Team strength updated successfully.",
+    });
   };
 
   const dateChecker = async (payload: any) => {
@@ -216,6 +237,41 @@ export const CycleListItemAction: FC<Props> = observer((props) => {
         <Eye className="h-4 w-4 my-auto  text-custom-primary-200" />
         <span>More details</span>
       </button>
+
+      {!isActive && (
+        <Controller
+          control={control}
+          name="team_strength"
+          render={({ field: { value, onChange } }) => (
+            <Tooltip tooltipContent={`Team strength: ${Math.round(value * 100)}%`}>
+              <div 
+                className={`h-6 flex items-center justify-center gap-1 text-xs border-[0.5px] border-custom-border-300 rounded px-2 ${!isDisabled ? "cursor-pointer hover:bg-custom-background-80" : "cursor-not-allowed"}`}
+                onClick={() => {
+                  if (isDisabled) return;
+                  
+                  const newValue = prompt("Enter team strength (0-2, where 1.0 = 100%):", value.toString());
+                  if (newValue === null) return;
+                  
+                  const parsedValue = parseFloat(newValue);
+                  if (isNaN(parsedValue)) {
+                    setToast({
+                      type: TOAST_TYPE.ERROR,
+                      title: "Error!",
+                      message: "Please enter a valid number.",
+                    });
+                    return;
+                  }
+                  
+                  onChange(parsedValue);
+                  handleTeamStrengthChange(parsedValue);
+                }}
+              >
+                <span>Team: {Math.round(value * 100)}%</span>
+              </div>
+            </Tooltip>
+          )}
+        />
+      )}
 
       {!isActive && (
         <Controller

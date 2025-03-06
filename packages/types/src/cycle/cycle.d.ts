@@ -93,6 +93,7 @@ export interface ICycle extends TProgressSnapshot {
   sort_order: number;
   start_date: string | null;
   sub_issues?: number;
+  team_strength: number;
   updated_at?: string;
   updated_by?: string;
   archived_at: string | null;

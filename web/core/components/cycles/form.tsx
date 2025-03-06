@@ -30,6 +30,7 @@ const defaultValues: Partial<ICycle> = {
   description: "",
   start_date: null,
   end_date: null,
+  team_strength: 1.0,
 };
 
 export const CycleForm: React.FC<Props> = (props) => {
@@ -47,6 +48,7 @@ export const CycleForm: React.FC<Props> = (props) => {
       description: data?.description || "",
       start_date: data?.start_date || null,
       end_date: data?.end_date || null,
+      team_strength: data?.team_strength || 1.0,
     },
   });
 
@@ -165,6 +167,44 @@ export const CycleForm: React.FC<Props> = (props) => {
                 />
               )}
             />
+          </div>
+          <div className="space-y-1">
+            <h6 className="text-sm mb-1 text-custom-text-200">Team strength</h6>
+            <Controller
+              name="team_strength"
+              control={control}
+              rules={{
+                required: "Team strength is required",
+                min: {
+                  value: 0,
+                  message: "Team strength cannot be negative",
+                },
+              }}
+              render={({ field: { value, onChange } }) => (
+                <div className="flex items-center">
+                  <Input
+                    name="team_strength"
+                    type="number"
+                    placeholder="1.0"
+                    className="w-full text-base"
+                    value={value}
+                    inputSize="md"
+                    onChange={(e) => onChange(parseFloat(e.target.value))}
+                    hasError={Boolean(errors?.team_strength)}
+                    tabIndex={getIndex("team_strength")}
+                    step="0.01"
+                    min="0"
+                  />
+                  <span className="ml-2">
+                    ({Math.round(value * 100)}%)
+                  </span>
+                </div>
+              )}
+            />
+            <span className="text-xs text-custom-text-400">
+              Team strength represents team capacity where 1.0 = 100% (normal capacity).
+            </span>
+            <span className="text-xs text-red-500">{errors?.team_strength?.message}</span>
           </div>
         </div>
       </div>
