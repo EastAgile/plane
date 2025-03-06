@@ -48,6 +48,18 @@ def get_default_preferences():
 
 class Project(BaseModel):
     NETWORK_CHOICES = ((0, "Secret"), (2, "Public"))
+    CYCLE_LENGTH_CHOICES = (
+        (1, "1 Week"),
+        (2, "2 Weeks"),
+        (3, "3 Weeks"),
+        (4, "4 Weeks"),
+    )
+    VELOCITY_STRATEGY_CHOICES = (
+        (1, "1 Cycle"),
+        (2, "2 Cycles"),
+        (3, "3 Cycles"),
+        (4, "4 Cycles"),
+    )
     name = models.CharField(max_length=255, verbose_name="Project Name")
     description = models.TextField(verbose_name="Project Description", blank=True)
     description_text = models.JSONField(
@@ -97,6 +109,16 @@ class Project(BaseModel):
     )
     estimate = models.ForeignKey(
         "db.Estimate", on_delete=models.SET_NULL, related_name="projects", null=True
+    )
+    # Velocity settings
+    initial_velocity = models.FloatField(
+        default=10.0, validators=[MinValueValidator(0.0)]
+    )
+    default_cycle_length = models.PositiveSmallIntegerField(
+        default=1, choices=CYCLE_LENGTH_CHOICES, validators=[MinValueValidator(1), MaxValueValidator(4)]
+    )
+    velocity_strategy = models.PositiveSmallIntegerField(
+        default=3, choices=VELOCITY_STRATEGY_CHOICES, validators=[MinValueValidator(1), MaxValueValidator(4)]
     )
     archive_in = models.IntegerField(
         default=0, validators=[MinValueValidator(0), MaxValueValidator(12)]

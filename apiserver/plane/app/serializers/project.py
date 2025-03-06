@@ -23,6 +23,25 @@ class ProjectSerializer(BaseSerializer):
         model = Project
         fields = "__all__"
         read_only_fields = ["workspace", "deleted_at"]
+        
+    def validate(self, data):
+        # Validate velocity settings
+        if "initial_velocity" in data and data["initial_velocity"] < 0:
+            raise serializers.ValidationError(
+                {"initial_velocity": "Initial velocity must be a positive number"}
+            )
+
+        if "default_cycle_length" in data and (data["default_cycle_length"] < 1 or data["default_cycle_length"] > 4):
+            raise serializers.ValidationError(
+                {"default_cycle_length": "Default cycle length must be between 1 and 4 weeks"}
+            )
+
+        if "velocity_strategy" in data and (data["velocity_strategy"] < 1 or data["velocity_strategy"] > 4):
+            raise serializers.ValidationError(
+                {"velocity_strategy": "Velocity strategy must be between 1 and 4 cycles"}
+            )
+            
+        return super().validate(data)
 
     def create(self, validated_data):
         identifier = validated_data.get("identifier", "").strip().upper()

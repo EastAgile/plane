@@ -54,6 +54,14 @@ export const PROJECT_SETTINGS = {
     highlight: (pathname: string, baseUrl: string) => pathname === `${baseUrl}/settings/estimates/`,
     Icon: SettingIcon,
   },
+  velocity: {
+    key: "velocity",
+    label: "Velocity",
+    href: `/settings/velocity`,
+    access: [EUserPermissions.ADMIN],
+    highlight: (pathname: string, baseUrl: string) => pathname === `${baseUrl}/settings/velocity/`,
+    Icon: SettingIcon,
+  },
   automations: {
     key: "automations",
     label: "Automations",
@@ -78,5 +86,6 @@ export const PROJECT_SETTINGS_LINKS: {
   PROJECT_SETTINGS["states"],
   PROJECT_SETTINGS["labels"],
   PROJECT_SETTINGS["estimates"],
+  PROJECT_SETTINGS["velocity"],
   PROJECT_SETTINGS["automations"],
 ];
