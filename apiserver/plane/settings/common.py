@@ -147,7 +147,8 @@ else:
     }
 
 # Redis Config
-REDIS_URL = os.environ.get("REDIS_URL")
+# REDIS_URL = os.environ.get("REDIS_URL")
+REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 REDIS_SSL = REDIS_URL and "rediss" in REDIS_URL
 
 if REDIS_SSL:

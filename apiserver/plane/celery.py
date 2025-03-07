@@ -49,6 +49,11 @@ app.conf.beat_schedule = {
         "task": "plane.bgtasks.project_velocity_task.recalculate_all_project_velocities",
         "schedule": crontab(hour=1, minute=0),
     },
+    # Auto-create next cycle when current cycle is ending (run daily at 2 AM)
+    "auto-create-next-cycle-daily": {
+        "task": "plane.bgtasks.cycle_auto_create_task.auto_create_next_cycle",
+        "schedule": crontab(hour=2, minute=0),
+    },
 }
 
 # Load task modules from all registered Django app configs.
