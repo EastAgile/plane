@@ -44,6 +44,11 @@ app.conf.beat_schedule = {
         "task": "plane.license.bgtasks.tracer.instance_traces",
         "schedule": crontab(hour="*/6", minute=0),
     },
+    # Auto-transfer unfinished issues from completed cycles (run daily at 00:30 AM)
+    "auto-transfer-cycle-issues-daily": {
+        "task": "plane.bgtasks.cycle_issue_transfer_task.auto_transfer_unfinished_cycle_issues",
+        "schedule": crontab(hour=0, minute=30),
+    },
     # Recalculate all project velocities daily at 1 AM (after other midnight tasks)
     "recalculate-project-velocities-daily": {
         "task": "plane.bgtasks.project_velocity_task.recalculate_all_project_velocities",
