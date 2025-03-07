@@ -85,8 +85,6 @@ export const VelocityRoot: FC<TVelocityRoot> = observer((props) => {
     setIsSubmitting(true);
 
     try {
-      console.log("Submitting velocity data:", data);
-
       // Ensure data values are numbers
       const payload = {
         initial_velocity: Number(data.initial_velocity),
@@ -153,7 +151,6 @@ export const VelocityRoot: FC<TVelocityRoot> = observer((props) => {
                         step="0.1" // Allow decimal values
                         placeholder="Enter initial velocity"
                         autoComplete="off"
-                        error={errors.initial_velocity}
                         value={value?.toString()}
                         onChange={(e) => {
                           // Handle input as string to preserve decimal values
