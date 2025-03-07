@@ -70,6 +70,8 @@ class Cycle(ProjectBaseModel):
     progress_snapshot = models.JSONField(default=dict)
     archived_at = models.DateTimeField(null=True)
     logo_props = models.JSONField(default=dict)
+    # team strength represents the team's capacity (1.0 = 100%)
+    team_strength = models.FloatField(default=1.0, verbose_name="Team Strength")
     # timezone
     TIMEZONE_CHOICES = tuple(zip(pytz.all_timezones, pytz.all_timezones))
     timezone = models.CharField(max_length=255, default="UTC", choices=TIMEZONE_CHOICES)

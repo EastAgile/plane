@@ -1,0 +1,1 @@
+# Signal handlers are registered in their respective modules

@@ -53,7 +53,11 @@ export const CycleDetailsSidebar: React.FC<Props> = observer((props) => {
           isArchived={isArchived}
           handleClose={handleClose}
         />
-        <CycleSidebarDetails projectId={projectId.toString()} cycleDetails={cycleDetails} />
+        <CycleSidebarDetails 
+          projectId={projectId.toString()} 
+          cycleDetails={cycleDetails} 
+          workspaceSlug={workspaceSlug.toString()} 
+        />
       </div>
 
       {workspaceSlug && projectId && cycleDetails?.id && (

@@ -42,6 +42,11 @@ export interface IProject {
   is_issue_type_enabled: boolean;
   is_member: boolean;
   is_time_tracking_enabled: boolean;
+  // velocity settings
+  initial_velocity: number;
+  default_cycle_length: number;
+  velocity_strategy: number;
+  current_velocity?: number | null;
   logo_props: TLogoProps;
   member_role: TUserPermissions | null;
   members: IProjectMemberLite[];

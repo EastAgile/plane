@@ -24,6 +24,11 @@ class CycleSerializer(BaseSerializer):
             and data.get("start_date", None) > data.get("end_date", None)
         ):
             raise serializers.ValidationError("Start date cannot exceed end date")
+        
+        # Validate team_strength is non-negative
+        if data.get("team_strength", None) is not None and data.get("team_strength") < 0:
+            raise serializers.ValidationError("Team strength cannot be negative")
+        
         return data
 
     class Meta:

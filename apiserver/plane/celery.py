@@ -44,6 +44,11 @@ app.conf.beat_schedule = {
         "task": "plane.license.bgtasks.tracer.instance_traces",
         "schedule": crontab(hour="*/6", minute=0),
     },
+    # Recalculate all project velocities daily at 1 AM (after other midnight tasks)
+    "recalculate-project-velocities-daily": {
+        "task": "plane.bgtasks.project_velocity_task.recalculate_all_project_velocities",
+        "schedule": crontab(hour=1, minute=0),
+    },
 }
 
 # Load task modules from all registered Django app configs.

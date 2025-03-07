@@ -307,6 +307,7 @@ class CycleArchiveUnarchiveEndpoint(BaseAPIView):
                     "external_source",
                     "external_id",
                     "progress_snapshot",
+                    "team_strength",
                     # meta fields
                     "total_issues",
                     "is_favorite",
@@ -357,6 +358,7 @@ class CycleArchiveUnarchiveEndpoint(BaseAPIView):
                     "progress_snapshot",
                     "sub_issues",
                     "logo_props",
+                    "team_strength",
                     # meta fields
                     "completed_estimate_points",
                     "total_estimate_points",
