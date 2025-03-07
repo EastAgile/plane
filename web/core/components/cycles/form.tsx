@@ -14,6 +14,8 @@ import { ETabIndices } from "@/constants/tab-indices";
 import { getDate, renderFormattedPayloadDate } from "@/helpers/date-time.helper";
 import { shouldRenderProject } from "@/helpers/project.helper";
 import { getTabIndex } from "@/helpers/tab-indices.helper";
+// hooks
+import { useProject } from "@/hooks/store";
 
 type Props = {
   handleFormSubmit: (values: Partial<ICycle>, dirtyFields: any) => Promise<void>;
@@ -180,26 +182,53 @@ export const CycleForm: React.FC<Props> = (props) => {
                   message: "Team strength cannot be negative",
                 },
               }}
-              render={({ field: { value, onChange } }) => (
-                <div className="flex items-center">
-                  <Input
-                    name="team_strength"
-                    type="number"
-                    placeholder="1.0"
-                    className="w-full text-base"
-                    value={value}
-                    inputSize="md"
-                    onChange={(e) => onChange(parseFloat(e.target.value))}
-                    hasError={Boolean(errors?.team_strength)}
-                    tabIndex={getIndex("team_strength")}
-                    step="0.01"
-                    min="0"
-                  />
-                  <span className="ml-2">
-                    ({Math.round(value * 100)}%)
-                  </span>
-                </div>
-              )}
+              render={({ field: { value, onChange } }) => {
+                // Get project details for velocity information
+                const { projectMap } = useProject();
+                const currentProject = projectMap[projectId];
+                const cycleLength = currentProject?.default_cycle_length || 1;
+                
+                // Calculate capacity based on velocity and team strength
+                const projectVelocity = currentProject?.current_velocity || currentProject?.initial_velocity || 0;
+                const cycleCapacity = projectVelocity * value;
+                
+                return (
+                  <div className="space-y-3">
+                    <div className="flex items-center">
+                      <Input
+                        name="team_strength"
+                        type="number"
+                        placeholder="1.0"
+                        className="w-full text-base"
+                        value={value}
+                        inputSize="md"
+                        onChange={(e) => onChange(parseFloat(e.target.value))}
+                        hasError={Boolean(errors?.team_strength)}
+                        tabIndex={getIndex("team_strength")}
+                        step="0.01"
+                        min="0"
+                      />
+                      <span className="ml-2">
+                        ({Math.round(value * 100)}%)
+                      </span>
+                    </div>
+                    
+                    {currentProject && projectVelocity > 0 && (
+                      <div className="p-3 bg-custom-background-80 rounded border border-custom-border-200">
+                        <div className="text-xs text-custom-text-200 mb-1">
+                          Project velocity: <span className="font-medium text-custom-text-100">{projectVelocity} points per {cycleLength} {cycleLength > 1 ? "weeks" : "week"}</span>
+                        </div>
+                        <div className="text-xs text-custom-text-200">
+                          Estimated capacity for this cycle: 
+                          <span className="font-medium text-custom-text-100 ml-1">
+                            {Math.floor(cycleCapacity)} points
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              }}
             />
             <span className="text-xs text-custom-text-400">
               Team strength represents team capacity where 1.0 = 100% (normal capacity).

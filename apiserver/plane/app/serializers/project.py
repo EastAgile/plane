@@ -18,11 +18,12 @@ from plane.db.models import (
 class ProjectSerializer(BaseSerializer):
     workspace_detail = WorkspaceLiteSerializer(source="workspace", read_only=True)
     inbox_view = serializers.BooleanField(read_only=True, source="intake_view")
+    current_velocity = serializers.FloatField(read_only=True)
 
     class Meta:
         model = Project
         fields = "__all__"
-        read_only_fields = ["workspace", "deleted_at"]
+        read_only_fields = ["workspace", "deleted_at", "current_velocity"]
         
     def validate(self, data):
         # Validate velocity settings

@@ -120,6 +120,9 @@ class Project(BaseModel):
     velocity_strategy = models.PositiveSmallIntegerField(
         default=3, choices=VELOCITY_STRATEGY_CHOICES, validators=[MinValueValidator(1), MaxValueValidator(4)]
     )
+    current_velocity = models.FloatField(
+        default=None, null=True, blank=True, validators=[MinValueValidator(0.0)]
+    )
     archive_in = models.IntegerField(
         default=0, validators=[MinValueValidator(0), MaxValueValidator(12)]
     )

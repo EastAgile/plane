@@ -3,7 +3,7 @@
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // icons
-import { Briefcase, Circle, ExternalLink } from "lucide-react";
+import { Briefcase, Circle, ExternalLink, Zap } from "lucide-react";
 // ui
 import { Breadcrumbs, Button, LayersIcon, Tooltip, Header } from "@plane/ui";
 // components
@@ -87,20 +87,34 @@ export const ProjectIssuesHeader = observer(() => {
             </Tooltip>
           ) : null}
         </div>
-        {currentProjectDetails?.anchor ? (
-          <a
-            href={publishedURL}
-            className="group flex items-center gap-1.5 rounded bg-custom-primary-100/10 px-2.5 py-1 text-xs font-medium text-custom-primary-100"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Circle className="h-1.5 w-1.5 fill-custom-primary-100" strokeWidth={2} />
-            Public
-            <ExternalLink className="hidden h-3 w-3 group-hover:block" strokeWidth={2} />
-          </a>
-        ) : (
-          <></>
-        )}
+        <div className="flex gap-2">
+          {currentProjectDetails?.current_velocity ? (
+            <Tooltip
+              isMobile={isMobile}
+              tooltipContent={`Team velocity: ${currentProjectDetails.current_velocity} points per ${currentProjectDetails.default_cycle_length} ${currentProjectDetails.default_cycle_length > 1 ? "weeks" : "week"}`}
+              position="bottom"
+            >
+              <div className="flex items-center gap-1 rounded bg-custom-primary-100/10 px-2.5 py-1 text-xs font-medium text-custom-primary-100">
+                <Zap className="h-3 w-3" />
+                {currentProjectDetails.current_velocity}
+              </div>
+            </Tooltip>
+          ) : null}
+          {currentProjectDetails?.anchor ? (
+            <a
+              href={publishedURL}
+              className="group flex items-center gap-1.5 rounded bg-custom-primary-100/10 px-2.5 py-1 text-xs font-medium text-custom-primary-100"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Circle className="h-1.5 w-1.5 fill-custom-primary-100" strokeWidth={2} />
+              Public
+              <ExternalLink className="hidden h-3 w-3 group-hover:block" strokeWidth={2} />
+            </a>
+          ) : (
+            <></>
+          )}
+        </div>
       </Header.LeftItem>
       <Header.RightItem>
         <div className="hidden gap-3 md:flex">
