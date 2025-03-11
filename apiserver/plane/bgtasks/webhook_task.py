@@ -515,5 +515,8 @@ def get_slack_text(event, event_data, action, activity, current_site, slug):
             return f"{actor_display_name} updated `description` to `{truncated_text}` for issue <{issues_base_url}{event_data['id']}|{event_data['name']}>"
         else:
             return f"{actor_display_name} updated `{activity['field']}` to `{strip_tags(activity['new_value'])}` for issue <{issues_base_url}{event_data['id']}|{event_data['name']}>"
+    elif event == "cycle" and action == "created":
+        cycle_url = f"{current_site}/{slug}/projects/{event_data['project']}/cycles/{event_data['id']}"
+        return f"A new cycle was created: <{cycle_url}|{event_data['name']}>"
 
     return None

@@ -1,6 +1,7 @@
 # Python imports
 import logging
 from datetime import datetime, timedelta
+import os
 
 # Third party imports
 from celery import shared_task
@@ -95,17 +96,13 @@ def auto_create_next_cycle():
 
                 # Trigger webhook for cycle creation
                 model_activity.delay(
-                    "cycle.activity.created",
-                    new_cycle.id,
-                    cycle.owned_by.id,
-                    cycle.project_id,
-                    cycle.workspace_id,
-                    {
-                        "cycle": {
-                            "name": new_cycle.name,
-                            "id": new_cycle.id,
-                        }
-                    }
+                    model_name="cycle",
+                    model_id=new_cycle.id,
+                    requested_data=None,
+                    current_instance=None,
+                    actor_id=cycle.owned_by.id,
+                    slug=cycle.project.workspace.slug,
+                    origin=os.environ.get("WEB_URL", "http://localhost"),
                 )
 
                 cycles_created += 1
