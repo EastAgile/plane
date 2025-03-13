@@ -66,9 +66,34 @@ export const CycleOptions: FC<CycleOptionsProps> = observer((props) => {
     ],
   });
 
-  const cycleIds = (getProjectCycleIds(projectId) ?? [])?.filter((cycleId) => {
+  // Get all cycle IDs for the project
+  const allCycleIds = getProjectCycleIds(projectId) ?? [];
+  
+  // Find the latest completed cycle
+  let latestCompletedCycleId: string | null = null;
+  let latestCompletedCycleEndDate: Date | null = null;
+  
+  allCycleIds.forEach((cycleId) => {
     const cycleDetails = getCycleById(cycleId);
-    return cycleDetails?.status ? (cycleDetails?.status.toLowerCase() != "completed" ? true : false) : true;
+    if (cycleDetails?.status?.toLowerCase() === "completed" && cycleDetails.end_date) {
+      const cycleEndDate = new Date(cycleDetails.end_date);
+      if (!latestCompletedCycleEndDate || cycleEndDate > latestCompletedCycleEndDate) {
+        latestCompletedCycleEndDate = cycleEndDate;
+        latestCompletedCycleId = cycleId;
+      }
+    }
+  });
+  
+  // Filter cycles: include all non-completed cycles plus the latest completed cycle
+  const cycleIds = allCycleIds.filter((cycleId) => {
+    const cycleDetails = getCycleById(cycleId);
+    // Include if: 
+    // 1. It's not completed, OR
+    // 2. It's the latest completed cycle
+    return (
+      cycleDetails?.status?.toLowerCase() !== "completed" || 
+      cycleId === latestCompletedCycleId
+    );
   });
 
   const onOpen = () => {
