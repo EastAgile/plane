@@ -37,7 +37,7 @@ const HomePage = observer(() => {
       <AuthenticationWrapper pageType={EPageTypes.NON_AUTHENTICATED}>
         <>
           <div className="relative w-screen h-screen overflow-hidden">
-            <PageHead title="Log in - Plane" />
+            <PageHead title="Log in - East Agile Tracker" />
             <div className="absolute inset-0 z-0">
               <Image
                 src={resolvedTheme === "dark" ? PlaneBackgroundPatternDark : PlaneBackgroundPattern}
