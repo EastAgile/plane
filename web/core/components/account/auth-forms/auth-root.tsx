@@ -194,7 +194,6 @@ export const AuthRoot: FC<TAuthRoot> = observer((props) => {
           />
         )}
         <OAuthOptions isSignUp={authMode === EAuthModes.SIGN_UP} />
-        <TermsAndConditions isSignUp={authMode === EAuthModes.SIGN_UP} />
       </AuthHeader>
     </div>
   );

@@ -46,23 +46,6 @@ const HomePage = observer(() => {
               />
             </div>
             <div className="relative z-10 w-screen h-screen overflow-hidden overflow-y-auto flex flex-col">
-              <div className="container min-w-full px-10 lg:px-20 xl:px-36 flex-shrink-0 relative flex items-center justify-between pb-4 transition-all">
-                <div className="flex items-center gap-x-2 py-10">
-                  <Link href={`/`} className="h-[30px] w-[133px]">
-                    <Image src={logo} alt="Plane logo" />
-                  </Link>
-                </div>
-                <div className="flex flex-col items-end sm:items-center sm:gap-2 sm:flex-row text-center text-sm font-medium text-onboarding-text-300">
-                  New to Plane?{" "}
-                  <Link
-                    href="/sign-up"
-                    onClick={() => captureEvent(NAVIGATE_TO_SIGNUP, {})}
-                    className="font-semibold text-custom-primary-100 hover:underline"
-                  >
-                    Create an account
-                  </Link>
-                </div>
-              </div>
               <div className="flex flex-col justify-center flex-grow container h-[100vh-60px] mx-auto max-w-lg px-10 lg:max-w-md lg:px-5 transition-all">
                 <AuthRoot authMode={EAuthModes.SIGN_IN} />
               </div>
