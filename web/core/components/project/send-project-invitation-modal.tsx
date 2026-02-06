@@ -157,7 +157,10 @@ export const SendProjectInvitationModal: React.FC<Props> = observer((props) => {
             </div>
             <div className="truncate">
               {memberDetails?.member.display_name} (
-              {memberDetails?.member.first_name + " " + memberDetails?.member.last_name})
+              {memberDetails?.member.first_name} {memberDetails?.member.last_name}
+              {(memberDetails?.email || memberDetails?.member?.email) &&
+                ` - ${memberDetails?.email || memberDetails?.member?.email}`}
+              )
             </div>
           </div>
         ),
@@ -262,7 +265,7 @@ export const SendProjectInvitationModal: React.FC<Props> = observer((props) => {
                                       );
                                     }}
                                     options={options}
-                                    optionsClassName="w-48"
+                                    optionsClassName="w-96"
                                   />
                                 );
                               }}
