@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose.yaml -o k8s/
+    kompose.version: 1.34.0 (cbf2835db)
+  labels:
+    io.kompose.service: api
+  name: api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: api
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker-compose.yaml -o k8s/
+        kompose.version: 1.34.0 (cbf2835db)
+      labels:
+        io.kompose.service: api
+    spec:
+      imagePullSecrets:
+        - name: docker-registry-key
+      containers:
+        - args:
+            - ./bin/docker-entrypoint-api.sh
+          envFrom:
+            - secretRef:
+                name: plane-secrets
+            - configMapRef:
+                name: plane-config
+          image: rememberizer/plane-backend:local
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          name: api
+          volumeMounts:
+            - mountPath: /code/plane/logs
+              name: logs-api
+      restartPolicy: Always
+      volumes:
+        - name: logs-api
+          persistentVolumeClaim:
+            claimName: logs-api
