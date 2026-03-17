@@ -1,13 +1,9 @@
 # Python Imports
 from datetime import datetime, timedelta
-import uuid
 
 # Django Imports
 from django.test import TestCase
 from django.utils import timezone
-
-# Third Party Imports
-from rest_framework.test import APIClient
 
 # Module Imports
 from plane.db.models import (
@@ -19,7 +15,9 @@ from plane.db.models import (
     State,
     CycleIssue,
 )
-from plane.bgtasks.cycle_issue_transfer_task import auto_transfer_unfinished_cycle_issues
+from plane.bgtasks.cycle_issue_transfer_task import (
+    auto_transfer_unfinished_cycle_issues,
+)
 
 
 class CycleIssueTransferTest(TestCase):
@@ -59,9 +57,16 @@ class CycleIssueTransferTest(TestCase):
         self.future_date = today + timedelta(days=10)
 
         # Convert to datetime for cycle fields
-        self.past_datetime = datetime.combine(self.past_date, datetime.min.time(), tzinfo=timezone.get_current_timezone())
-        self.yesterday_end = datetime.combine(self.yesterday, datetime.max.time(), tzinfo=timezone.get_current_timezone())
-        self.future_datetime = datetime.combine(self.future_date, datetime.min.time(), tzinfo=timezone.get_current_timezone())
+        tz = timezone.get_current_timezone()
+        self.past_datetime = datetime.combine(
+            self.past_date, datetime.min.time(), tzinfo=tz
+        )
+        self.yesterday_end = datetime.combine(
+            self.yesterday, datetime.max.time(), tzinfo=tz
+        )
+        self.future_datetime = datetime.combine(
+            self.future_date, datetime.min.time(), tzinfo=tz
+        )
 
         # Create states for different groups
         self.backlog_state = State.objects.create(
@@ -100,7 +105,8 @@ class CycleIssueTransferTest(TestCase):
         )
 
     def test_auto_transfer_unfinished_issues(self):
-        """Test that unfinished issues are automatically transferred when a cycle ends"""
+        """Test unfinished issues are auto-transferred when
+        a cycle ends."""
         # Create a cycle that ended yesterday
         ended_cycle = Cycle.objects.create(
             name="Ended Cycle",
@@ -221,13 +227,17 @@ class CycleIssueTransferTest(TestCase):
         
         # Verify completed and cancelled issues remain in the original cycle
         self.assertTrue(
-            CycleIssue.objects.filter(cycle=ended_cycle, issue=completed_issue).exists(),
-            "Completed issue should remain in the ended cycle"
+            CycleIssue.objects.filter(
+                cycle=ended_cycle, issue=completed_issue
+            ).exists(),
+            "Completed issue should remain in the ended cycle",
         )
-        
+
         self.assertTrue(
-            CycleIssue.objects.filter(cycle=ended_cycle, issue=cancelled_issue).exists(),
-            "Cancelled issue should remain in the ended cycle"
+            CycleIssue.objects.filter(
+                cycle=ended_cycle, issue=cancelled_issue
+            ).exists(),
+            "Cancelled issue should remain in the ended cycle",
         )
         
     def test_no_transfer_when_no_next_cycle(self):
@@ -253,7 +263,7 @@ class CycleIssueTransferTest(TestCase):
         )
         
         # Add issue to the ended cycle
-        cycle_issue = CycleIssue.objects.create(
+        CycleIssue.objects.create(
             cycle=ended_cycle,
             issue=backlog_issue,
             project=self.project,

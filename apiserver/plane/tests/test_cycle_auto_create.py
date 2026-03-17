@@ -1,13 +1,9 @@
 # Python Imports
 from datetime import datetime, timedelta
-import uuid
 
 # Django Imports
 from django.test import TestCase
 from django.utils import timezone
-
-# Third Party Imports
-from rest_framework.test import APIClient
 
 # Module Imports
 from plane.db.models import (
@@ -56,12 +52,20 @@ class CycleAutoCreateTest(TestCase):
         self.future_date = today + timedelta(days=10)
 
         # Convert to datetime for cycle fields
-        self.past_datetime = datetime.combine(self.past_date, datetime.min.time(), tzinfo=timezone.get_current_timezone())
-        self.tomorrow_datetime = datetime.combine(self.tomorrow, datetime.max.time(), tzinfo=timezone.get_current_timezone())
-        self.future_datetime = datetime.combine(self.future_date, datetime.min.time(), tzinfo=timezone.get_current_timezone())
+        tz = timezone.get_current_timezone()
+        self.past_datetime = datetime.combine(
+            self.past_date, datetime.min.time(), tzinfo=tz
+        )
+        self.tomorrow_datetime = datetime.combine(
+            self.tomorrow, datetime.max.time(), tzinfo=tz
+        )
+        self.future_datetime = datetime.combine(
+            self.future_date, datetime.min.time(), tzinfo=tz
+        )
 
     def test_auto_create_cycle_when_ending_tomorrow(self):
-        """Test that a new cycle is created when current cycle ends tomorrow and no upcoming cycle exists"""
+        """Test new cycle is created when current cycle ends
+        tomorrow and no upcoming cycle exists."""
         # Create a cycle that is active and ends tomorrow
         ending_cycle = Cycle.objects.create(
             name="Ending Cycle",
@@ -93,14 +97,18 @@ class CycleAutoCreateTest(TestCase):
         self.assertEqual(new_cycle.start_date.date(), expected_start_date)
 
         # Duration should be the same as the ending cycle
-        ending_cycle_duration = (ending_cycle.end_date.date() - ending_cycle.start_date.date()).days + 1
-        expected_end_date = expected_start_date + timedelta(days=ending_cycle_duration - 1)
+        start = ending_cycle.start_date.date()
+        end = ending_cycle.end_date.date()
+        ending_cycle_duration = (end - start).days + 1
+        expected_end_date = expected_start_date + timedelta(
+            days=ending_cycle_duration - 1
+        )
         self.assertEqual(new_cycle.end_date.date(), expected_end_date)
 
     def test_no_cycle_created_when_upcoming_exists(self):
         """Test that no new cycle is created when there's already an upcoming cycle"""
         # Create a cycle that is active and ends tomorrow
-        ending_cycle = Cycle.objects.create(
+        Cycle.objects.create(
             name="Ending Cycle",
             project=self.project,
             workspace=self.workspace,
@@ -111,7 +119,7 @@ class CycleAutoCreateTest(TestCase):
         )
 
         # Create an upcoming cycle for the same project
-        upcoming_cycle = Cycle.objects.create(
+        Cycle.objects.create(
             name="Upcoming Cycle",
             project=self.project,
             workspace=self.workspace,
@@ -130,13 +138,14 @@ class CycleAutoCreateTest(TestCase):
     def test_no_cycle_created_when_not_ending_tomorrow(self):
         """Test that no new cycle is created for cycles not ending tomorrow"""
         # Create a cycle that is active but doesn't end tomorrow
-        active_cycle = Cycle.objects.create(
+        Cycle.objects.create(
             name="Active Cycle",
             project=self.project,
             workspace=self.workspace,
             owned_by=self.user,
             start_date=self.past_datetime,
-            end_date=self.past_datetime + timedelta(days=10),  # Ends in the future, but not tomorrow
+            # Ends in the future, but not tomorrow
+            end_date=self.past_datetime + timedelta(days=10),
             team_strength=1.0,
         )
 
