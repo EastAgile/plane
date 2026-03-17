@@ -39,6 +39,7 @@ The default branch is `ea_main`. Base all new branches and PRs on `ea_main`.
 ```bash
 ./setup.sh                                        # Copy env files, generate SECRET_KEY
 docker compose -f docker-compose-local.yml up -d  # Start all services
+# Access at http://localhost:9999 (Nginx proxy)
 ```
 
 ### Frontend Development

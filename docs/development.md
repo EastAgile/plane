@@ -2,11 +2,27 @@
 
 ## Prerequisites
 
-- Node.js (for frontend apps)
-- Yarn 1.22 (package manager)
-- Python 3.12 (for API server)
-- Docker & Docker Compose (for infrastructure services)
-- Git
+- **Docker Desktop** — Required for running the full stack locally
+- **Yarn 1.22** — JavaScript package manager (install via `brew install yarn`)
+- **Node.js 18+** — For frontend development
+- **Git**
+
+### Installing Prerequisites (macOS)
+
+```bash
+# Install Yarn
+brew install yarn
+
+# Install Docker Desktop
+brew install --cask docker
+
+# Launch Docker Desktop (required before first use)
+open /Applications/Docker.app
+
+# Link Docker Compose CLI plugin (if `docker compose` doesn't work)
+mkdir -p ~/.docker/cli-plugins
+ln -sf /Applications/Docker.app/Contents/Resources/cli-plugins/docker-compose ~/.docker/cli-plugins/docker-compose
+```
 
 ## Quick Start with Docker
 
@@ -18,14 +34,19 @@ git clone <repo-url>
 cd plane
 ./setup.sh                  # Copies .env.example files, generates SECRET_KEY
 
-# 2. Start all services
+# 2. Start all services (first run builds images, takes a few minutes)
 docker compose -f docker-compose-local.yml up -d
 
-# 3. Access
-# Web:   http://localhost:3000
-# Admin: http://localhost:3001
-# API:   http://localhost:8000
+# 3. Wait for migrations and API startup
+docker compose -f docker-compose-local.yml logs -f migrator  # Watch migrations
+docker compose -f docker-compose-local.yml logs -f api       # Watch API startup
+
+# 4. Access via Nginx proxy
+# All services: http://localhost:9999
 ```
+
+> **Note**: All services are accessed through the Nginx proxy on port 9999.
+> The proxy routes to the correct internal service based on the URL path.
 
 ## Frontend Development
 
@@ -142,16 +163,41 @@ Build outputs are cached in `.turbo/` directories.
 
 ## Docker Services (Local)
 
-| Service | Image | Port |
-|---------|-------|------|
-| web | plane-web | 3000 |
-| admin | plane-admin | 3001 |
-| api | plane-backend | 8000 |
-| worker | plane-backend | — |
-| beat-worker | plane-backend | — |
-| live | plane-live | — |
-| postgres | postgres:15.7 | 5432 |
-| redis | valkey:7.2.5 | 6379 |
-| rabbitmq | rabbitmq:3.13.6 | 5672 |
-| minio | minio | 9000 |
-| nginx | plane-proxy | 9999 |
+| Service | Image | Internal Port | Description |
+|---------|-------|---------------|-------------|
+| web | plane-web | 3000 | Main web application |
+| admin | plane-admin | 3000 | Admin dashboard |
+| space | plane-space | 4000 | Public issue viewer |
+| live | plane-live | 3003 | Real-time collaboration |
+| api | plane-api | 8000 | Django REST API |
+| worker | plane-worker | — | Celery worker |
+| beat-worker | plane-beat-worker | — | Celery beat scheduler |
+| migrator | plane-migrator | — | Runs DB migrations then exits |
+| plane-db | postgres:15.7-alpine | 5432 | PostgreSQL database |
+| plane-redis | valkey:7.2.5-alpine | 6379 | Redis cache |
+| plane-mq | rabbitmq:3.13.6 | 5672 | RabbitMQ message queue |
+| plane-minio | minio/minio | 9000 | S3-compatible object storage |
+| proxy | plane-proxy | 80 → **9999** | Nginx reverse proxy (only exposed port) |
+
+### Useful Docker Commands
+
+```bash
+# Check all service status
+docker compose -f docker-compose-local.yml ps
+
+# View logs for a specific service
+docker compose -f docker-compose-local.yml logs -f web
+docker compose -f docker-compose-local.yml logs -f api
+
+# Restart a single service
+docker compose -f docker-compose-local.yml restart api
+
+# Stop all services
+docker compose -f docker-compose-local.yml down
+
+# Stop and remove volumes (reset database)
+docker compose -f docker-compose-local.yml down -v
+
+# Rebuild images after code changes to Dockerfiles
+docker compose -f docker-compose-local.yml up -d --build
+```
