@@ -12,3 +12,4 @@ This directory contains technical documentation for the Plane project management
 | [Packages](packages.md) | Shared monorepo packages (ui, editor, types, etc.) |
 | [Development](development.md) | Local setup, Docker, workflows, and tooling |
 | [Deployment](deployment.md) | Docker Compose, self-hosting, CI/CD pipelines |
+| [Fork Changelog](fork-changelog.md) | EA fork changes and upstream divergence since Dec 2024 |
