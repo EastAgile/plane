@@ -1,8 +1,8 @@
 // web/core/components/web-hooks/form/project-selection.tsx
 
 import { FC, useState } from "react";
-import { Combobox } from "@headlessui/react";
 import { Check, Search } from "lucide-react";
+import { Combobox } from "@headlessui/react";
 
 import { TWebhookProjectType } from "@plane/types";
 
