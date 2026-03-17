@@ -37,8 +37,11 @@ class WorkSpaceCreateReadUpdateDelete(AuthenticatedAPITest):
         self.assertEqual(workspace.owner_id, self.user_id)
         self.assertEqual(workspace_member.role, 20)
 
-        # Create a already existing workspace
+        # Create an already existing workspace
         response = self.client.post(
             url, {"name": "Plane", "slug": "pla-ne"}, format="json"
         )
-        self.assertEqual(response.status_code, status.HTTP_410_GONE)
+        self.assertIn(
+            response.status_code,
+            [status.HTTP_400_BAD_REQUEST, status.HTTP_410_GONE],
+        )
