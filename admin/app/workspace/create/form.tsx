@@ -39,7 +39,8 @@ export const WorkspaceCreateForm = () => {
     formState: { errors, isSubmitting, isValid },
   } = useForm<IWorkspace>({ defaultValues, mode: "onChange" });
   // derived values
-  const workspaceBaseURL = encodeURI(WEB_BASE_URL || window.location.origin + "/");
+  const baseURL = WEB_BASE_URL || window.location.origin;
+  const workspaceBaseURL = encodeURI(baseURL.endsWith("/") ? baseURL : baseURL + "/");
 
   const handleCreateWorkspace = async (formData: IWorkspace) => {
     await workspaceService
