@@ -37,6 +37,8 @@ const defaultValues: Partial<ICycle> = {
 
 export const CycleForm: React.FC<Props> = (props) => {
   const { handleFormSubmit, handleClose, status, projectId, setActiveProject, data, isMobile = false } = props;
+  // hooks
+  const { projectMap } = useProject();
   // form data
   const {
     formState: { errors, isSubmitting, dirtyFields },
@@ -184,14 +186,13 @@ export const CycleForm: React.FC<Props> = (props) => {
               }}
               render={({ field: { value, onChange } }) => {
                 // Get project details for velocity information
-                const { projectMap } = useProject();
                 const currentProject = projectMap[projectId];
                 const cycleLength = currentProject?.default_cycle_length || 1;
-                
+
                 // Calculate capacity based on velocity and team strength
                 const projectVelocity = currentProject?.current_velocity || currentProject?.initial_velocity || 0;
                 const cycleCapacity = projectVelocity * value;
-                
+
                 return (
                   <div className="space-y-3">
                     <div className="flex items-center">
@@ -212,14 +213,14 @@ export const CycleForm: React.FC<Props> = (props) => {
                         ({Math.round(value * 100)}%)
                       </span>
                     </div>
-                    
+
                     {currentProject && projectVelocity > 0 && (
                       <div className="p-3 bg-custom-background-80 rounded border border-custom-border-200">
                         <div className="text-xs text-custom-text-200 mb-1">
                           Project velocity: <span className="font-medium text-custom-text-100">{projectVelocity} points per {cycleLength} {cycleLength > 1 ? "weeks" : "week"}</span>
                         </div>
                         <div className="text-xs text-custom-text-200">
-                          Estimated capacity for this cycle: 
+                          Estimated capacity for this cycle:
                           <span className="font-medium text-custom-text-100 ml-1">
                             {Math.floor(cycleCapacity)} points
                           </span>

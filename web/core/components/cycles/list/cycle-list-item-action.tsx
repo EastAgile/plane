@@ -139,7 +139,7 @@ export const CycleListItemAction: FC<Props> = observer((props) => {
     if (!workspaceSlug || !projectId || !cycleId) return;
     updateCycleDetails(workspaceSlug.toString(), projectId.toString(), cycleId.toString(), data);
   };
-  
+
   const handleTeamStrengthChange = async (value: number) => {
     if (!workspaceSlug || !projectId || !cycleId) return;
     if (value < 0) {
@@ -244,14 +244,14 @@ export const CycleListItemAction: FC<Props> = observer((props) => {
           name="team_strength"
           render={({ field: { value, onChange } }) => (
             <Tooltip tooltipContent={`Team strength: ${Math.round(value * 100)}%`}>
-              <div 
+              <div
                 className={`h-6 flex items-center justify-center gap-1 text-xs border-[0.5px] border-custom-border-300 rounded px-2 ${!isDisabled ? "cursor-pointer hover:bg-custom-background-80" : "cursor-not-allowed"}`}
                 onClick={() => {
                   if (isDisabled) return;
-                  
+
                   const newValue = prompt("Enter team strength (0-2, where 1.0 = 100%):", value.toString());
                   if (newValue === null) return;
-                  
+
                   const parsedValue = parseFloat(newValue);
                   if (isNaN(parsedValue)) {
                     setToast({
@@ -261,7 +261,7 @@ export const CycleListItemAction: FC<Props> = observer((props) => {
                     });
                     return;
                   }
-                  
+
                   onChange(parsedValue);
                   handleTeamStrengthChange(parsedValue);
                 }}
