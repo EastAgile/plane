@@ -42,26 +42,99 @@ Production Docker Compose uses named volumes for data persistence:
 - MinIO object storage
 - Upload artifacts
 
-## CI/CD
+## EA Production Deployment (Kubernetes)
 
-GitHub Actions workflows are in `.github/workflows/`:
+EA runs Plane on Kubernetes in the `ea-tracker` namespace. Deployment is automated via GitHub Actions.
+
+### Automated CI/CD (`ea-deploy.yml`)
+
+**Triggers:**
+- **Automatic**: Every push to `ea_main` detects changed files and builds + deploys only affected services.
+- **Manual**: Use "Run workflow" on the Actions tab to deploy specific services or force a full deploy.
+
+**How it works:**
+
+```
+Push to ea_main
+    ↓
+Detect changed files
+    ↓ (parallel)
+Build affected Docker images → Push to registry
+    ↓
+Run DB migrations (if migration files changed)
+    ↓
+Restart affected K8s deployments
+    ↓
+Verify pod status
+```
+
+**Manual dispatch options:**
+- `services`: Comma-separated list (e.g., `web,api`) or `all` (default)
+- `skip_build`: Set to `true` to just restart K8s deployments without rebuilding images
+
+### Service → Image → Deployment Mapping
+
+| Changed files | Image built | K8s deployments restarted |
+|---------------|-------------|--------------------------|
+| `web/`, `packages/` | `plane-frontend` | `web` |
+| `admin/`, `packages/` | `plane-admin` | `admin` |
+| `space/`, `packages/` | `plane-space` | `space` |
+| `live/`, `packages/` | `plane-live` | `live` |
+| `apiserver/` | `plane-backend` | `api`, `worker`, `beat-worker` |
+| `nginx/` | `plane-proxy` | `proxy` |
+| `apiserver/*/migrations/` | (triggers migrator) | `migrator` pod recreated |
+
+### Required GitHub Secrets
+
+These must be configured in the repo settings under Settings → Secrets → Actions:
+
+| Secret | Description |
+|--------|-------------|
+| `EA_DOCKER_REGISTRY` | Container registry hostname (e.g., `docker.io`, `ghcr.io`) |
+| `EA_DOCKER_REGISTRY_OWNER` | Image namespace/owner (e.g., `rememberizer`) |
+| `EA_DOCKER_USERNAME` | Registry login username |
+| `EA_DOCKER_PASSWORD` | Registry login password or token |
+| `EA_KUBECONFIG` | Full kubeconfig YAML for the K8s cluster |
+
+### Manual Deployment (fallback)
+
+If you need to deploy manually, see [`deploy/kubernetes/README.md`](../deploy/kubernetes/README.md) for step-by-step instructions.
+
+```bash
+# Build image
+docker build -t <registry-owner>/plane-frontend:latest -f web/Dockerfile.web .
+docker push <registry-owner>/plane-frontend:latest
+
+# Restart deployment
+kubectl rollout restart deployment/web -n ea-tracker
+
+# Run migrations (if needed)
+kubectl delete pod migrator -n ea-tracker --ignore-not-found
+kubectl apply -f deploy/kubernetes/k8s/migrator-pod.yaml -n ea-tracker
+
+# Verify
+kubectl get pods -n ea-tracker
+```
+
+### K8s Configuration
+
+- **Namespace**: `ea-tracker`
+- **Manifests**: `deploy/kubernetes/k8s/`
+- **Non-secret config**: `deploy/kubernetes/k8s/plane-config.yaml` (committed to repo)
+- **Secrets**: `plane-secrets.yaml` (NOT in repo — managed separately)
+
+## CI/CD Workflows
+
+GitHub Actions workflows in `.github/workflows/`:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `build-branch.yml` | Manual dispatch | Build and push Docker images |
-| `build-test-pull-request.yml` | Pull requests | Run tests on PRs |
-| `feature-deployment.yml` | Feature branches | Deploy feature environments |
+| **`ea-deploy.yml`** | **Push to `ea_main` / Manual** | **EA production build & deploy** |
+| `build-branch.yml` | Manual dispatch | Upstream build pipeline (Docker Hub) |
+| `build-test-pull-request.yml` | Pull requests | Run linting on PRs |
 | `build-aio-branch.yml` | Manual dispatch | Build all-in-one image |
 | `codeql.yml` | Push/PR | Security scanning |
 | `check-version.yml` | Push | Version validation |
-
-### Build Pipeline
-
-The main build workflow (`build-branch.yml`):
-1. Builds Docker images for all services
-2. Supports multi-platform: `linux/amd64`, `linux/arm64`
-3. Pushes to Docker Hub under `makeplane/*`
-4. Supports release versioning and pre-releases
 
 ## All-in-One (AIO) Container
 
