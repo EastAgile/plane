@@ -1,0 +1,301 @@
+name: EA Deploy
+
+on:
+  push:
+    branches: [ea_main]
+  workflow_dispatch:
+    inputs:
+      services:
+        description: "Services to deploy (comma-separated, or 'all')"
+        required: false
+        default: "all"
+        type: string
+      skip_build:
+        description: "Skip Docker build (just restart K8s deployments)"
+        required: false
+        default: false
+        type: boolean
+
+env:
+  REGISTRY: ${{ secrets.EA_DOCKER_REGISTRY }}
+  REGISTRY_OWNER: ${{ secrets.EA_DOCKER_REGISTRY_OWNER }}
+  K8S_NAMESPACE: ea-tracker
+  IMAGE_TAG: latest
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Detect which services changed (skipped on manual dispatch with explicit services)
+  # ---------------------------------------------------------------------------
+  detect_changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      web: ${{ steps.changes.outputs.web_any_changed }}
+      admin: ${{ steps.changes.outputs.admin_any_changed }}
+      space: ${{ steps.changes.outputs.space_any_changed }}
+      live: ${{ steps.changes.outputs.live_any_changed }}
+      apiserver: ${{ steps.changes.outputs.apiserver_any_changed }}
+      proxy: ${{ steps.changes.outputs.proxy_any_changed }}
+      has_migrations: ${{ steps.changes.outputs.migrations_any_changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Get changed files
+        id: changes
+        uses: tj-actions/changed-files@v42
+        with:
+          files_yaml: |
+            web:
+              - web/**
+              - packages/**
+              - package.json
+              - yarn.lock
+              - turbo.json
+            admin:
+              - admin/**
+              - packages/**
+              - package.json
+              - yarn.lock
+              - turbo.json
+            space:
+              - space/**
+              - packages/**
+              - package.json
+              - yarn.lock
+              - turbo.json
+            live:
+              - live/**
+              - packages/**
+              - package.json
+              - yarn.lock
+              - turbo.json
+            apiserver:
+              - apiserver/**
+            proxy:
+              - nginx/**
+            migrations:
+              - apiserver/plane/db/migrations/**
+              - apiserver/plane/license/migrations/**
+
+  # ---------------------------------------------------------------------------
+  # Build & push Docker images (parallel per service)
+  # ---------------------------------------------------------------------------
+  build_web:
+    name: Build Web
+    needs: detect_changes
+    if: |
+      (github.event_name == 'push' && needs.detect_changes.outputs.web == 'true') ||
+      (github.event_name == 'workflow_dispatch' && !inputs.skip_build && (inputs.services == 'all' || contains(inputs.services, 'web')))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/ea-build-push
+        with:
+          image-name: plane-frontend
+          build-context: .
+          dockerfile: ./web/Dockerfile.web
+          registry: ${{ env.REGISTRY }}
+          registry-owner: ${{ env.REGISTRY_OWNER }}
+          registry-username: ${{ secrets.EA_DOCKER_USERNAME }}
+          registry-password: ${{ secrets.EA_DOCKER_PASSWORD }}
+          image-tag: ${{ env.IMAGE_TAG }}
+
+  build_admin:
+    name: Build Admin
+    needs: detect_changes
+    if: |
+      (github.event_name == 'push' && needs.detect_changes.outputs.admin == 'true') ||
+      (github.event_name == 'workflow_dispatch' && !inputs.skip_build && (inputs.services == 'all' || contains(inputs.services, 'admin')))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/ea-build-push
+        with:
+          image-name: plane-admin
+          build-context: .
+          dockerfile: ./admin/Dockerfile.admin
+          registry: ${{ env.REGISTRY }}
+          registry-owner: ${{ env.REGISTRY_OWNER }}
+          registry-username: ${{ secrets.EA_DOCKER_USERNAME }}
+          registry-password: ${{ secrets.EA_DOCKER_PASSWORD }}
+          image-tag: ${{ env.IMAGE_TAG }}
+
+  build_space:
+    name: Build Space
+    needs: detect_changes
+    if: |
+      (github.event_name == 'push' && needs.detect_changes.outputs.space == 'true') ||
+      (github.event_name == 'workflow_dispatch' && !inputs.skip_build && (inputs.services == 'all' || contains(inputs.services, 'space')))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/ea-build-push
+        with:
+          image-name: plane-space
+          build-context: .
+          dockerfile: ./space/Dockerfile.space
+          registry: ${{ env.REGISTRY }}
+          registry-owner: ${{ env.REGISTRY_OWNER }}
+          registry-username: ${{ secrets.EA_DOCKER_USERNAME }}
+          registry-password: ${{ secrets.EA_DOCKER_PASSWORD }}
+          image-tag: ${{ env.IMAGE_TAG }}
+
+  build_live:
+    name: Build Live
+    needs: detect_changes
+    if: |
+      (github.event_name == 'push' && needs.detect_changes.outputs.live == 'true') ||
+      (github.event_name == 'workflow_dispatch' && !inputs.skip_build && (inputs.services == 'all' || contains(inputs.services, 'live')))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/ea-build-push
+        with:
+          image-name: plane-live
+          build-context: .
+          dockerfile: ./live/Dockerfile.live
+          registry: ${{ env.REGISTRY }}
+          registry-owner: ${{ env.REGISTRY_OWNER }}
+          registry-username: ${{ secrets.EA_DOCKER_USERNAME }}
+          registry-password: ${{ secrets.EA_DOCKER_PASSWORD }}
+          image-tag: ${{ env.IMAGE_TAG }}
+
+  build_backend:
+    name: Build Backend
+    needs: detect_changes
+    if: |
+      (github.event_name == 'push' && needs.detect_changes.outputs.apiserver == 'true') ||
+      (github.event_name == 'workflow_dispatch' && !inputs.skip_build && (inputs.services == 'all' || contains(inputs.services, 'api')))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/ea-build-push
+        with:
+          image-name: plane-backend
+          build-context: ./apiserver
+          dockerfile: ./apiserver/Dockerfile.api
+          registry: ${{ env.REGISTRY }}
+          registry-owner: ${{ env.REGISTRY_OWNER }}
+          registry-username: ${{ secrets.EA_DOCKER_USERNAME }}
+          registry-password: ${{ secrets.EA_DOCKER_PASSWORD }}
+          image-tag: ${{ env.IMAGE_TAG }}
+
+  build_proxy:
+    name: Build Proxy
+    needs: detect_changes
+    if: |
+      (github.event_name == 'push' && needs.detect_changes.outputs.proxy == 'true') ||
+      (github.event_name == 'workflow_dispatch' && !inputs.skip_build && (inputs.services == 'all' || contains(inputs.services, 'proxy')))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/ea-build-push
+        with:
+          image-name: plane-proxy
+          build-context: ./nginx
+          dockerfile: ./nginx/Dockerfile
+          registry: ${{ env.REGISTRY }}
+          registry-owner: ${{ env.REGISTRY_OWNER }}
+          registry-username: ${{ secrets.EA_DOCKER_USERNAME }}
+          registry-password: ${{ secrets.EA_DOCKER_PASSWORD }}
+          image-tag: ${{ env.IMAGE_TAG }}
+
+  # ---------------------------------------------------------------------------
+  # Deploy to Kubernetes
+  # ---------------------------------------------------------------------------
+  deploy:
+    name: Deploy to K8s
+    needs:
+      - detect_changes
+      - build_web
+      - build_admin
+      - build_space
+      - build_live
+      - build_backend
+      - build_proxy
+    if: always() && !cancelled()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v4
+        with:
+          kubeconfig: ${{ secrets.EA_KUBECONFIG }}
+
+      - name: Run migrations (if needed)
+        if: |
+          needs.detect_changes.outputs.has_migrations == 'true' ||
+          (github.event_name == 'workflow_dispatch' && (inputs.services == 'all' || contains(inputs.services, 'api')))
+        run: |
+          kubectl delete pod migrator -n ${{ env.K8S_NAMESPACE }} --ignore-not-found
+          kubectl apply -f deploy/kubernetes/k8s/migrator-pod.yaml -n ${{ env.K8S_NAMESPACE }}
+          echo "Waiting for migrator to complete..."
+          kubectl wait --for=condition=Ready pod/migrator -n ${{ env.K8S_NAMESPACE }} --timeout=300s || true
+          kubectl logs pod/migrator -n ${{ env.K8S_NAMESPACE }} --tail=20
+
+      - name: Restart affected deployments
+        env:
+          MANUAL_SERVICES: ${{ inputs.services }}
+          CHANGED_WEB: ${{ needs.detect_changes.outputs.web }}
+          CHANGED_ADMIN: ${{ needs.detect_changes.outputs.admin }}
+          CHANGED_SPACE: ${{ needs.detect_changes.outputs.space }}
+          CHANGED_LIVE: ${{ needs.detect_changes.outputs.live }}
+          CHANGED_API: ${{ needs.detect_changes.outputs.apiserver }}
+          CHANGED_PROXY: ${{ needs.detect_changes.outputs.proxy }}
+        run: |
+          DEPLOYMENTS=()
+
+          should_deploy() {
+            local service="$1"
+            local changed="$2"
+            if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+              [ "$MANUAL_SERVICES" == "all" ] || echo "$MANUAL_SERVICES" | grep -q "$service"
+            else
+              [ "$changed" == "true" ]
+            fi
+          }
+
+          if should_deploy "web" "$CHANGED_WEB"; then
+            DEPLOYMENTS+=("web")
+          fi
+          if should_deploy "admin" "$CHANGED_ADMIN"; then
+            DEPLOYMENTS+=("admin")
+          fi
+          if should_deploy "space" "$CHANGED_SPACE"; then
+            DEPLOYMENTS+=("space")
+          fi
+          if should_deploy "live" "$CHANGED_LIVE"; then
+            DEPLOYMENTS+=("live")
+          fi
+          if should_deploy "api" "$CHANGED_API"; then
+            DEPLOYMENTS+=("api" "worker" "beat-worker")
+          fi
+          if should_deploy "proxy" "$CHANGED_PROXY"; then
+            DEPLOYMENTS+=("proxy")
+          fi
+
+          if [ ${#DEPLOYMENTS[@]} -eq 0 ]; then
+            echo "No deployments to restart."
+            exit 0
+          fi
+
+          echo "Restarting deployments: ${DEPLOYMENTS[*]}"
+          for dep in "${DEPLOYMENTS[@]}"; do
+            echo "→ Restarting $dep..."
+            kubectl rollout restart deployment/$dep -n ${{ env.K8S_NAMESPACE }}
+          done
+
+      - name: Wait for rollouts
+        run: |
+          echo "Waiting for rollouts to complete..."
+          for dep in $(kubectl get deployments -n ${{ env.K8S_NAMESPACE }} -o name); do
+            kubectl rollout status $dep -n ${{ env.K8S_NAMESPACE }} --timeout=300s || true
+          done
+
+      - name: Verify pod status
+        run: |
+          echo "=== Pod Status ==="
+          kubectl get pods -n ${{ env.K8S_NAMESPACE }}
